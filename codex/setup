@@ -16,6 +16,10 @@ MARKETPLACE="huggingface"
 CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
 
 FUNES="${FUNES_BIN:-funes}"
+# funes's MCP server names funes and this agent in its Hub requests: hf-hub appends
+# HF_HUB_USER_AGENT_ORIGIN to its User-Agent. The registration is static, so the agent's version,
+# which the hooks add, is left out.
+MCP_ENV="HF_HUB_USER_AGENT_ORIGIN=funes; agent/codex"
 
 usage() {
     echo "usage: setup add [MEMORY] | setup remove" >&2
@@ -126,9 +130,9 @@ manual_add() {
     echo "  codex plugin marketplace add $PLUGIN_ROOT"
     echo "  codex plugin add $PLUGIN_ID"
     if [ -n "$memory" ]; then
-        echo "  codex mcp add funes -- $FUNES mcp $memory"
+        echo "  codex mcp add funes --env '$MCP_ENV' -- $FUNES mcp $memory"
     else
-        echo "  codex mcp add funes -- $FUNES mcp"
+        echo "  codex mcp add funes --env '$MCP_ENV' -- $FUNES mcp"
     fi
 }
 
@@ -159,10 +163,10 @@ add() {
     # bump; `mcp add` overwrites an existing registration, so a re-run may change the memory.
     codex plugin add "$PLUGIN_ID"
     if [ -n "$memory" ]; then
-        codex mcp add funes -- "$FUNES" mcp "$memory"
+        codex mcp add funes --env "$MCP_ENV" -- "$FUNES" mcp "$memory"
         echo "installed funes into Codex — recall, per-turn indexing, and publishing to $memory."
     else
-        codex mcp add funes -- "$FUNES" mcp
+        codex mcp add funes --env "$MCP_ENV" -- "$FUNES" mcp
         echo "installed funes into Codex — recall and per-turn indexing, local only."
     fi
     # Codex skips a hook until its exact command is trusted, so an install that says nothing here

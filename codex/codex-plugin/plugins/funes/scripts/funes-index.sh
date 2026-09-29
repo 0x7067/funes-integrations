@@ -52,6 +52,20 @@ rollout() {
         2>/dev/null | head -1
 }
 
+# Name funes, this agent and its version (when known) in funes's Hub requests: hf-hub appends
+# HF_HUB_USER_AGENT_ORIGIN to its User-Agent. An origin already set is kept in front.
+tag_hub_requests() {
+    origin="funes; agent/$HARNESS${1:+; agent_version/$1}"
+    export HF_HUB_USER_AGENT_ORIGIN="${HF_HUB_USER_AGENT_ORIGIN:+$HF_HUB_USER_AGENT_ORIGIN; }$origin"
+}
+
+# The Codex version that wrote a rollout, from the session_meta record that opens it.
+agent_version() {
+    [ -n "$2" ] && [ -r "$2" ] || return 0
+    head -n 5 "$2" | "$1" -rR 'fromjson? | select(.type == "session_meta") | .payload.cli_version // empty | strings' \
+        2>/dev/null | head -n 1
+}
+
 # One rollout into the spool, named after its own file stem.
 convert_one() {
     jq=$1
@@ -135,6 +149,7 @@ worker() {
     fi
 
     src=$(rollout "$jq" "$payload" || true)
+    tag_hub_requests "$(agent_version "$jq" "$src")"
     if [ -n "$src" ]; then
         convert_one "$jq" "$src"
     else

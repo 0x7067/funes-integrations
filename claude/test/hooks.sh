@@ -18,11 +18,13 @@ export HOME="$tmp/home"
 mkdir -p "$HOME/.funes/agents" "$tmp/bin"
 cat >"$tmp/bin/funes" <<'FAKE'
 #!/bin/sh
-printf '%s\n' "$*" >>"$FUNES_TEST_CLI_LOG"
+printf '%s: %s\n' "${HF_HUB_USER_AGENT_ORIGIN:-}" "$*" >>"$FUNES_TEST_CLI_LOG"
 FAKE
 chmod +x "$tmp/bin/funes"
 export PATH="$tmp/bin:/usr/bin:/bin"
 export FUNES_TEST_CLI_LOG="$tmp/cli.log"
+# funes and the agent are named after an origin the user set.
+export HF_HUB_USER_AGENT_ORIGIN=mine
 # Claude Code's transcripts live under its config directory, wherever the user put it.
 export CLAUDE_CONFIG_DIR="$tmp/claude-config"
 
@@ -72,10 +74,10 @@ transcript d.jsonl
 printf 'acme/kb\n' >"$scripts/memory"
 fire --publish
 [ -f "$spool/d.funes.jsonl" ] || fail "the boundary did not convert before publishing"
-expected="index --harness claude
-index --harness claude
-index --harness claude
-push acme/kb"
+expected="mine; funes; agent/claude; agent_version/2.1.175: index --harness claude
+mine; funes; agent/claude; agent_version/2.1.175: index --harness claude
+mine; funes; agent/claude; agent_version/2.1.175: index --harness claude
+mine; funes; agent/claude; agent_version/2.1.175: push acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "funes was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 

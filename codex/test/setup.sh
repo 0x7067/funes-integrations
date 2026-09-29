@@ -72,7 +72,7 @@ if grep -q acme/kb "$hooks"; then fail "the memory is in the hook command"; fi
 [ ! -e "$HOME/.agents" ] || fail "the shared tree's skill copy stays"
 expected="plugin marketplace add $marketplace
 plugin add funes@huggingface
-mcp add funes -- funes mcp acme/kb"
+mcp add funes --env HF_HUB_USER_AGENT_ORIGIN=funes; agent/codex -- funes mcp acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "codex was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 

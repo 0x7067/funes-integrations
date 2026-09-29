@@ -56,6 +56,13 @@ const SEED_PENDING = join(HERE, "seed-pending");
 
 const memory = (process.env.FUNES_MEMORY || bound("memory")).trim();
 const FUNES_ARGS = memory ? ["mcp", memory] : ["mcp"];
+// funes, pi and pi's version, as funes's Hub requests name them: hf-hub appends
+// HF_HUB_USER_AGENT_ORIGIN to its User-Agent. An origin already set is kept in front. The version is
+// added at activation.
+const HUB_ORIGIN = [process.env.HF_HUB_USER_AGENT_ORIGIN, "funes; agent/pi"];
+function funesEnv() {
+  return { ...process.env, HF_HUB_USER_AGENT_ORIGIN: HUB_ORIGIN.filter(Boolean).join("; ") };
+}
 const PROTOCOL_VERSION = "2024-11-05"; // matches funes' rmcp server
 const CALL_TIMEOUT_MS = 120_000;
 const HANDSHAKE_TIMEOUT_MS = 10_000; // pi's startup waits on these, so they don't get a recall's bound
@@ -74,7 +81,7 @@ class FunesMcp {
 
   private ensureStarted(): Promise<void> {
     if (this.child && this.ready) return this.ready;
-    const child = spawn(FUNES_BIN, FUNES_ARGS, { stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(FUNES_BIN, FUNES_ARGS, { env: funesEnv(), stdio: ["pipe", "pipe", "pipe"] });
     this.child = child;
     // The server is kept warm for the whole session, so unref it (and its pipes)
     // — an in-flight call's timer keeps the loop alive, but once the agent's turn
@@ -209,7 +216,7 @@ function runScript(script: string, ...args: string[]) {
   if (!SPOOL || !existsSync(script)) return;
   try {
     // Through `sh`, the one shell a box running pi is promised.
-    const child = spawn("sh", [script, ...args], { detached: true, stdio: "ignore" });
+    const child = spawn("sh", [script, ...args], { env: funesEnv(), detached: true, stdio: "ignore" });
     child.on("error", () => {});
     child.unref();
   } catch {}
@@ -269,6 +276,10 @@ function seedPending(): boolean {
 }
 
 export default async function (pi: any) {
+  // pi lends its extensions its own package: `@mariozechner/…` is its name, kept as an alias since
+  // the rename. Anything else leaves the version out.
+  const version = await import("@mariozechner/pi-coding-agent").then((m) => String(m.VERSION ?? ""), () => "");
+  if (version) HUB_ORIGIN.push(`agent_version/${version}`);
   let tools: McpTool[] = [];
   let failure = "";
   try {

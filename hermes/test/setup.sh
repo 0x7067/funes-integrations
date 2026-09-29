@@ -26,6 +26,8 @@ printf '%s\n' "$*" >>"$FUNES_TEST_CLI_LOG"
 case "$1 ${2:-}" in
 "mcp remove") IFS= read -r answer || { echo "hermes: no answer to the removal prompt" >&2; exit 3; } ;;
 esac
+# `mcp add` takes an environment for its server, unless this is an older hermes.
+[ "$*" != "mcp add --help" ] || [ -n "${FAKE_HERMES_NO_MCP_ENV:-}" ] || echo "  --env [ENV ...]       Environment variables for stdio servers (KEY=VALUE)"
 FAKE
 chmod +x "$tmp/bin/hermes"
 export PATH="$tmp/bin:/usr/bin:/bin"
@@ -90,7 +92,8 @@ expected="config path
 hooks revoke bash \"/old/funes-index.sh\" \"hermes\"
 hooks revoke bash \"/old/funes-push.sh\" \"acme/kb\" \"hermes\"
 plugins enable funes
-mcp add funes --command funes --args mcp acme/kb"
+mcp add --help
+mcp add funes --env HF_HUB_USER_AGENT_ORIGIN=funes; agent/hermes --command funes --args mcp acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "hermes was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 
@@ -135,4 +138,10 @@ printf '%s\n' "$mine" >"$config"
 grep -q "removed funes's own shell hooks" "$tmp/remove.out" && fail "reported an edit that did not happen"
 # Already absent remains a successful no-op.
 "$setup" remove >/dev/null 2>&1
+
+# A hermes whose `mcp add` takes no environment registers funes without one.
+: >"$FUNES_TEST_CLI_LOG"
+FAKE_HERMES_NO_MCP_ENV=1 "$setup" add >/dev/null 2>&1 || fail "add failed on a hermes with no \`mcp add --env\`"
+grep -qx 'mcp add funes --command funes --args mcp' "$FUNES_TEST_CLI_LOG" || fail "hermes was asked:
+$(cat "$FUNES_TEST_CLI_LOG")"
 echo "hermes setup: ok"
