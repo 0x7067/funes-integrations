@@ -48,6 +48,20 @@ convert_one() {
     fi
 }
 
+# Name funes, this agent and its version (when known) in funes's Hub requests: hf-hub appends
+# HF_HUB_USER_AGENT_ORIGIN to its User-Agent. An origin already set is kept in front.
+tag_hub_requests() {
+    origin="funes; agent/$HARNESS${1:+; agent_version/$1}"
+    export HF_HUB_USER_AGENT_ORIGIN="${HF_HUB_USER_AGENT_ORIGIN:+$HF_HUB_USER_AGENT_ORIGIN; }$origin"
+}
+
+# The Claude Code version that wrote a transcript: every record carries it, so its last lines
+# settle it.
+agent_version() {
+    [ -n "$2" ] && [ -r "$2" ] || return 0
+    tail -n 20 "$2" | "$1" -rR 'fromjson? | .version // empty | strings' 2>/dev/null | tail -n 1
+}
+
 # The transcripts changed since the last sweep: sessions whose own hook never fired — untrusted,
 # timed out, a host that died mid-turn — and the sub-agents a workflow nests under a session, whose
 # SubagentStop funes may not see. What the spool holds cannot say which those are (funes drains it),
@@ -123,6 +137,7 @@ worker() {
     agent_src=$("$jq" -r '.agent_transcript_path // empty' "$payload" 2>/dev/null || true)
     src=$("$jq" -r '.transcript_path // empty' "$payload" 2>/dev/null || true)
     named=${agent_src:-$src}
+    tag_hub_requests "$(agent_version "$jq" "$named")"
     convert_one "$jq" "$named"
     convert_stale "$jq" "$named"
 

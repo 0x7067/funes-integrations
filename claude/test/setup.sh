@@ -56,7 +56,7 @@ expected="plugin marketplace add $plugin
 plugin uninstall funes@huggingface
 plugin install funes@huggingface
 mcp remove funes
-mcp add funes -s user -- funes mcp acme/kb"
+mcp add funes -s user -e HF_HUB_USER_AGENT_ORIGIN=funes; agent/claude -- funes mcp acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "claude was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 

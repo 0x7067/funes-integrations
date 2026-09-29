@@ -17,6 +17,19 @@ from . import convert
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+def _hub_origin():
+    """funes, hermes and the running hermes's version, as funes's Hub requests name them: hf-hub
+    appends HF_HUB_USER_AGENT_ORIGIN to its User-Agent. An origin already set is kept in front."""
+    parts = [os.environ.get("HF_HUB_USER_AGENT_ORIGIN"), "funes; agent/hermes"]
+    try:
+        from hermes_cli import __version__
+
+        parts.append(f"agent_version/{__version__}")
+    except ImportError:
+        pass
+    return "; ".join(p for p in parts if p)
+
+
 def _beside(name):
     """A path `funes add hermes` recorded beside this plugin, or None when it did not."""
     try:
@@ -74,8 +87,10 @@ def _convert_stale(named):
 def _spawn(script, *args):
     """Run `script` detached and forget it — through `sh`, the one shell a box running hermes is
     promised."""
+    env = dict(os.environ, HF_HUB_USER_AGENT_ORIGIN=_hub_origin())
     subprocess.Popen(
         ["sh", os.path.join(HERE, script), *args],
+        env=env,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

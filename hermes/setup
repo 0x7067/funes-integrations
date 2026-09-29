@@ -11,6 +11,10 @@ SOURCE="$HERE/plugin"
 PLUGIN=funes
 
 FUNES="${FUNES_BIN:-funes}"
+# funes's MCP server names funes and this agent in its Hub requests: hf-hub appends
+# HF_HUB_USER_AGENT_ORIGIN to its User-Agent. The registration is static, so the agent's version,
+# which the hooks add, is left out.
+MCP_ENV="HF_HUB_USER_AGENT_ORIGIN=funes; agent/hermes"
 
 usage() {
     echo "usage: setup add [MEMORY] | setup remove" >&2
@@ -150,9 +154,9 @@ manual_add() {
     memory=${1:-}
     echo "  hermes plugins enable $PLUGIN"
     if [ -n "$memory" ]; then
-        echo "  hermes mcp add funes --command $FUNES --args mcp $memory"
+        echo "  hermes mcp add funes --env '$MCP_ENV' --command $FUNES --args mcp $memory"
     else
-        echo "  hermes mcp add funes --command $FUNES --args mcp"
+        echo "  hermes mcp add funes --env '$MCP_ENV' --command $FUNES --args mcp"
     fi
 }
 
@@ -181,12 +185,19 @@ add() {
     fi
 
     hermes plugins enable "$PLUGIN"
+    # hermes hands its MCP servers only the environment their registration names; a hermes whose
+    # `mcp add` takes none registers funes without it.
+    if hermes mcp add --help 2>/dev/null | grep -q -- '--env '; then
+        set -- --env "$MCP_ENV"
+    else
+        set --
+    fi
     # `mcp add` probes the server and then asks whether to enable its tools, cancelling on EOF.
     if [ -n "$memory" ]; then
-        printf 'y\ny\n' | hermes mcp add funes --command "$FUNES" --args mcp "$memory"
+        printf 'y\ny\n' | hermes mcp add funes "$@" --command "$FUNES" --args mcp "$memory"
         echo "installed funes into hermes — recall, per-turn indexing, and publishing to $memory. Hermes indexing is beta."
     else
-        printf 'y\ny\n' | hermes mcp add funes --command "$FUNES" --args mcp
+        printf 'y\ny\n' | hermes mcp add funes "$@" --command "$FUNES" --args mcp
         echo "installed funes into hermes — recall and per-turn indexing, local only. Hermes indexing is beta."
     fi
 }

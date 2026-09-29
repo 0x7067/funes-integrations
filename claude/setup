@@ -14,6 +14,10 @@ MARKETPLACE="huggingface"
 LEGACY="$HOME/.funes/integrations/claude-plugin"
 
 FUNES="${FUNES_BIN:-funes}"
+# funes's MCP server names funes and this agent in its Hub requests: hf-hub appends
+# HF_HUB_USER_AGENT_ORIGIN to its User-Agent. The registration is static, so the agent's version,
+# which the hooks add, is left out.
+MCP_ENV="HF_HUB_USER_AGENT_ORIGIN=funes; agent/claude"
 
 usage() {
     echo "usage: setup add [MEMORY] | setup remove" >&2
@@ -89,9 +93,9 @@ manual_add() {
     echo "  claude plugin marketplace add $PLUGIN_ROOT"
     echo "  claude plugin install $PLUGIN_ID"
     if [ -n "$memory" ]; then
-        echo "  claude mcp add funes -s user -- $FUNES mcp $memory"
+        echo "  claude mcp add funes -s user -e '$MCP_ENV' -- $FUNES mcp $memory"
     else
-        echo "  claude mcp add funes -s user -- $FUNES mcp"
+        echo "  claude mcp add funes -s user -e '$MCP_ENV' -- $FUNES mcp"
     fi
 }
 
@@ -130,9 +134,9 @@ add() {
     # fail without this.
     claude mcp remove funes >/dev/null 2>&1 || true
     if [ -n "$memory" ]; then
-        claude mcp add funes -s user -- "$FUNES" mcp "$memory"
+        claude mcp add funes -s user -e "$MCP_ENV" -- "$FUNES" mcp "$memory"
     else
-        claude mcp add funes -s user -- "$FUNES" mcp
+        claude mcp add funes -s user -e "$MCP_ENV" -- "$FUNES" mcp
     fi
 
     if [ -n "$memory" ]; then

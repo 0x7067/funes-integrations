@@ -45,8 +45,16 @@ for name, value in (("spool", spool), ("state-db", db), ("memory", "acme/kb")):
 log = os.path.join(tmp, "worker.log")
 script = os.path.join(dest, "funes-index.sh")
 with open(script, "w", encoding="utf-8") as f:
-    f.write(f"#!/bin/sh\nprintf '%s\\n' \"$*\" >>\"{log}\"\n")
+    f.write(f"#!/bin/sh\nprintf '%s: %s\\n' \"${{HF_HUB_USER_AGENT_ORIGIN:-}}\" \"$*\" >>\"{log}\"\n")
 os.chmod(script, 0o755)
+
+# The hermes the plugin runs inside, for the version funes names.
+fake_hermes = os.path.join(tmp, "site")
+os.makedirs(os.path.join(fake_hermes, "hermes_cli"))
+with open(os.path.join(fake_hermes, "hermes_cli", "__init__.py"), "w", encoding="utf-8") as f:
+    f.write('__version__ = "9.9.9"\n')
+sys.path.insert(0, fake_hermes)
+os.environ.pop("HF_HUB_USER_AGENT_ORIGIN", None)
 
 # Loaded as the package hermes loads.
 spec = importlib.util.spec_from_file_location("funes", os.path.join(dest, "__init__.py"), submodule_search_locations=[dest])
@@ -76,7 +84,8 @@ for fn in hooks["on_session_finalize"]:
     fn()
 
 deadline = time.time() + 10
-expected = "\n--publish\n"
+origin = "funes; agent/hermes; agent_version/9.9.9"
+expected = f"{origin}: \n{origin}: --publish\n"
 while True:
     try:
         with open(log, encoding="utf-8") as f:

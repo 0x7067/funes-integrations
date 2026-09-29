@@ -14,6 +14,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 delete process.env.FUNES_MEMORY;
+delete process.env.HF_HUB_USER_AGENT_ORIGIN;
 
 // Only `sh` is promised on a box running pi: a `bash` that fails proves nothing is spawned
 // through it.
@@ -47,9 +48,14 @@ function install(root, { memory = "", pending = false } = {}) {
   writeFileSync(join(ext, "sessions"), `${sessions}\n`);
   if (pending) writeFileSync(join(ext, "seed-pending"), `${sessions}\n`);
   if (memory) writeFileSync(join(ext, "memory"), `${memory}\n`);
+  // The package pi lends its extensions, for the version funes names.
+  const pkg = join(root, "node_modules", "@mariozechner", "pi-coding-agent");
+  mkdirSync(pkg, { recursive: true });
+  writeFileSync(join(pkg, "package.json"), '{"name":"@mariozechner/pi-coding-agent","type":"module","main":"index.js"}');
+  writeFileSync(join(pkg, "index.js"), 'export const VERSION = "9.9.9";\n');
   const log = join(root, "worker.log");
   const script = join(ext, "scripts", "funes-index.sh");
-  writeFileSync(script, `#!/bin/sh\n{ printf 'funes-index.sh%s\\n' "${"${*:+ $*}"}"; ls "${spool}"; } >"${log}.tmp" && mv "${log}.tmp" "${log}"\n`);
+  writeFileSync(script, `#!/bin/sh\nprintf '%s' "$HF_HUB_USER_AGENT_ORIGIN" >"${log}.agent"\n{ printf 'funes-index.sh%s\\n' "${"${*:+ $*}"}"; ls "${spool}"; } >"${log}.tmp" && mv "${log}.tmp" "${log}"\n`);
   chmodSync(script, 0o755);
   return { ext, sessions, spool, log };
 }
@@ -93,7 +99,7 @@ async function startup(memory, funes = "exec cat") {
   await handlers.session_start({ reason: "startup" }, { ui: { notify: (text) => notices.push(text) } });
 
   if (existsSync(join(ext, "seed-pending"))) throw new Error("the pending history was not converted");
-  return { log: await workerLog(log, memory || "the local memory"), notices };
+  return { root, log: await workerLog(log, memory || "the local memory"), notices };
 }
 
 // A turn of the session at `file`, with `stale` written since the last sweep and `foreign` a
@@ -112,7 +118,13 @@ async function turn(root, file, stale, foreign) {
   return { named: converted(named), stale: converted(others[0]), foreign: converted(others[1]), swept: existsSync(join(ext, "swept")) };
 }
 
-const local = await startup("");
+// The `funes mcp` it spawns, and the worker, name funes, pi and its version in their Hub requests.
+const local = await startup("", `printf '%s' "$HF_HUB_USER_AGENT_ORIGIN" >"$(dirname "$0")/agent"; exec cat`);
+for (const [who, file] of [["funes mcp", join(local.root, "agent")], ["the worker", join(local.root, "worker.log.agent")]]) {
+  const agent = readFileSync(file, "utf8");
+  const want = "funes; agent/pi; agent_version/9.9.9";
+  if (agent !== want) throw new Error(`${who}: expected ${want}, got ${JSON.stringify(agent)}`);
+}
 if (local.log !== "funes-index.sh\nsession.funes.jsonl\n") {
   throw new Error(`local memory: expected the index worker to find the seeded session, got:\n${local.log}`);
 }
