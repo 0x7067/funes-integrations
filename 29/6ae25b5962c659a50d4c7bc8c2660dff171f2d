@@ -1,0 +1,14 @@
+COMMUNITY.md
+  h_29be57c0addd47 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "296ae25b5962c659a50d4c7bc8c2660dff171f2d",
+  "prompts": {},
+  "humans": {
+    "h_29be57c0addd47": {
+      "author": "Pedro Guimarães <21346846+0x7067@users.noreply.github.com>"
+    }
+  }
+}
