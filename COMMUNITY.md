@@ -27,7 +27,7 @@ Released from this repository and installed by name, `funes add <id>`.
 
 | Integration | Publisher | Harness or client | What it does | funes interfaces | Source | Install and support |
 | --- | --- | --- | --- | --- | --- | --- |
-| _none yet_ | | | | | | |
+| [`opencode`](https://github.com/0x7067/funes-opencode) | 0x7067 | OpenCode v2 | read tools, per-turn indexing, session-boundary publish | MCP, spool, turns format | [source](https://github.com/0x7067/funes-opencode) | [install](https://github.com/0x7067/funes-opencode#install) · `funes add opencode <memory> --from hf://buckets/0x7067/funes-integrations/opencode/0.1.0/opencode.tar.gz` |
 
 ## Listing yours
 
