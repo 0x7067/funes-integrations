@@ -22,6 +22,7 @@ Released from this repository and installed by name, `funes add <id>`.
 | [`codex`](codex/) | Codex | read tools, per-turn indexing, session-boundary publish |
 | [`hermes`](hermes/) | Hermes | read tools, per-turn indexing (beta), session-boundary publish |
 | [`pi`](pi/) | pi | read tools, per-turn indexing, session-boundary publish |
+| [`jcode`](jcode/) | jcode | read tools, per-turn indexing, session-boundary publish |
 
 ## Community
 

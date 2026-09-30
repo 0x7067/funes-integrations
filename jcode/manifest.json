@@ -2,6 +2,6 @@
   "contract_version": 1,
   "id": "jcode",
   "label": "Jcode",
-  "repo": "0x7067/funes-jcode",
+  "repo": "huggingface/funes-integrations",
   "version": "0.1.0"
 }
