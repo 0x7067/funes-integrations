@@ -1,0 +1,4 @@
+{"meta":{"parent_id":null,"title":"fixture","updated_at":"2026-09-28T10:00:00Z","working_dir":"/tmp/proj","is_debug":false,"is_canary":false},"append_messages":[{"id":"msg_u1","role":"user","content":[{"type":"text","text":"why does the build fail?"}],"timestamp":"2026-09-28T10:00:00Z"}]}
+{"append_messages":[{"id":"msg_a1","role":"assistant","content":[{"type":"reasoning","text":"check logs"},{"type":"text","text":"Let me look."},{"type":"tool_use","id":"call_1","name":"bash","input":{"command":"make"}}],"timestamp":"2026-09-28T10:00:01Z"}]}
+{"append_messages":[{"id":"msg_u2","role":"user","content":[{"type":"tool_result","tool_use_id":"call_1","content":"ok"}],"timestamp":"2026-09-28T10:00:02Z","tool_duration_ms":50}]}
+{"append_messages":[{"id":"msg_a2","role":"assistant","content":"still streaming" ,"timestamp":"2026-09-28T10:00:03Z"},{"id":"msg_a2","role":"assistant","content":[{"type":"text","text":"fixed it"}],"timestamp":"2026-09-28T10:00:03Z"}]}

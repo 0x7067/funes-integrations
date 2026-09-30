@@ -1,0 +1,93 @@
+#!/bin/sh
+# funes's jcode integration: register `funes mcp` as an MCP server in mcp.json, point jcode's
+# turn_end/session_end lifecycle hooks at the bundle's dispatcher — which converts each
+# finished turn out of the session journal and indexes it — and, with a memory bound,
+# publish at session boundaries.
+#
+#   setup add [MEMORY]   MEMORY: <org>/<repo>, an hf://… URI, or absent for the local memory
+#   setup remove
+#
+# funes runs this with FUNES_BIN (the binary to record), FUNES_HOME (whose memory and spool
+# this serves) and FUNES_AGENT_ID (this integration's id, naming its spool). JCODE_HOME
+# overrides ~/.jcode.
+set -eu
+
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+FUNES="${FUNES_BIN:-funes}"
+AGENT="${FUNES_AGENT_ID:-jcode}"
+JHOME="${JCODE_HOME:-$HOME/.jcode}"
+
+spool_dir() {
+    printf '%s/spool/%s\n' "${FUNES_HOME:-$HOME/.funes}" "$AGENT"
+}
+
+usage() {
+    echo "usage: setup add [MEMORY] | setup remove" >&2
+    exit 2
+}
+
+js_runtime() {
+    for js in node bun deno; do
+        command -v "$js" >/dev/null 2>&1 && { printf '%s\n' "$js"; return 0; }
+    done
+    return 1
+}
+
+add() {
+    memory=${1:-}
+    if [ -n "$memory" ]; then
+        printf '%s\n' "$memory" >"$HERE/memory"
+    else
+        rm -f "$HERE/memory"
+    fi
+
+    spool=$(spool_dir)
+    mkdir -p "$spool"
+    printf '%s\n' "$spool" >"$HERE/spool"
+    printf '%s\n' "$JHOME/sessions" >"$HERE/sessions"
+
+    if js=$(js_runtime); then
+        JCODE_HOME="$JHOME" FUNES_BIN="$FUNES" FUNES_MEMORY="$memory" FUNES_BUNDLE="$HERE" \
+            "$js" "$HERE/edit-config.mjs" set
+        # Convert what jcode has already recorded, so recall reaches it before the next turn.
+        if [ -d "$JHOME/sessions" ]; then
+            "$js" "$HERE/convert.mjs" "$JHOME/sessions" "$spool" >/dev/null ||
+                echo "existing sessions did not convert — the hook retries on turn end." >&2
+        fi
+    else
+        echo "no JS runtime on PATH — wire these by hand:" >&2
+        echo "  mcp.json servers: \"funes\": {\"command\":\"$FUNES\",\"args\":[\"mcp\"],\"shared\":true}" >&2
+        echo "  config.toml [hooks]: turn_end = \"$HERE/hooks/funes.sh\", session_end = same" >&2
+    fi
+
+    echo "installed funes into jcode — the funes MCP server, per-turn indexing, and" \
+        "session-boundary publish are now active (restart jcode if it's running)."
+}
+
+remove() {
+    if js=$(js_runtime); then
+        JCODE_HOME="$JHOME" FUNES_BIN="$FUNES" FUNES_BUNDLE="$HERE" \
+            "$js" "$HERE/edit-config.mjs" unset
+    else
+        echo "no JS runtime on PATH — remove by hand: the funes entry in $JHOME/mcp.json" >&2
+        echo "and the turn_end/session_end lines under [hooks] in $JHOME/config.toml." >&2
+    fi
+    rm -rf "$(spool_dir)" "$HERE/previous"
+    rm -f "$HERE/memory" "$HERE/spool" "$HERE/sessions"
+    echo "removed funes from jcode — the MCP server entry, hooks, and this integration's" \
+        "spool. Your memory and jcode's own journals are untouched."
+}
+
+case "${1:-}" in
+add)
+    shift
+    [ $# -le 1 ] || usage
+    add "${1:-}"
+    ;;
+remove)
+    shift
+    [ $# -eq 0 ] || usage
+    remove
+    ;;
+*) usage ;;
+esac
