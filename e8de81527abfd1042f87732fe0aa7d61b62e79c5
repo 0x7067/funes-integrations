@@ -1,0 +1,34 @@
+opencode/.gitignore
+  h_29be57c0addd47 1-4
+opencode/README.md
+  h_29be57c0addd47 1-85
+opencode/convert.mjs
+  h_29be57c0addd47 1-160
+opencode/edit-config.mjs
+  h_29be57c0addd47 1-57
+opencode/manifest.json
+  h_29be57c0addd47 1-7
+opencode/plugin/funes.js
+  h_29be57c0addd47 1-118
+opencode/scripts/funes-index.sh
+  h_29be57c0addd47 1-79
+opencode/setup
+  h_29be57c0addd47 1-120
+opencode/test/expected.funes.jsonl
+  h_29be57c0addd47 1-7
+opencode/test/fixture.sql
+  h_29be57c0addd47 1-103
+opencode/test/run.sh
+  h_29be57c0addd47 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e8de81527abfd1042f87732fe0aa7d61b62e79c5",
+  "prompts": {},
+  "humans": {
+    "h_29be57c0addd47": {
+      "author": "Pedro Guimarães <21346846+0x7067@users.noreply.github.com>"
+    }
+  }
+}
