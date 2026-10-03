@@ -1,0 +1,25 @@
+claude/test/setup.sh
+  s_2c83a85b61ab64::t_6ba6a525257323 63-68
+codex/setup
+  s_2c83a85b61ab64::t_04e0d74e8f2aa7 71-74
+claude/setup
+  s_2c83a85b61ab64::t_977df767137a92 72-75
+codex/test/setup.sh
+  s_2c83a85b61ab64::t_f028ae3a1a94be 79-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "99268d117d2b1568c8abb931667bef28f17e204a",
+  "prompts": {},
+  "sessions": {
+    "s_2c83a85b61ab64": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "01a1026a-8dda-774a-8791-01dafc14e703",
+        "model": "swe-2"
+      },
+      "human_author": "Pedro Guimarães <21346846+0x7067@users.noreply.github.com>"
+    }
+  }
+}
