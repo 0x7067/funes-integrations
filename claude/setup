@@ -69,7 +69,10 @@ seed() {
     [ -d "$projects" ] || return 0
     find "$projects" -type f -name '*.jsonl' | while IFS= read -r src; do
         stem=${src##*/}
-        "$PLUGIN_ROOT/funes/convert" "$src" "$spool/${stem%.jsonl}.funes.jsonl" || true
+        out="$spool/${stem%.jsonl}.funes.jsonl"
+        # A conversion newer than its transcript is current — a re-run seeds only what changed.
+        [ -f "$out" ] && [ "$out" -nt "$src" ] && continue
+        "$PLUGIN_ROOT/funes/convert" "$src" "$out" || true
     done
 }
 

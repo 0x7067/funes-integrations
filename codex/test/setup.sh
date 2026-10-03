@@ -76,6 +76,12 @@ mcp add funes --env HF_HUB_USER_AGENT_ORIGIN=funes; agent/codex -- funes mcp acm
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "codex was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 
+# A conversion newer than its rollout is current: a re-run leaves it alone.
+printf sentinel >"$FUNES_HOME/spool/codex/rollout-seed.funes.jsonl"
+touch -t 204001010000 "$FUNES_HOME/spool/codex/rollout-seed.funes.jsonl"
+"$setup" add acme/kb >/dev/null
+[ "$(cat "$FUNES_HOME/spool/codex/rollout-seed.funes.jsonl")" = sentinel ] || fail "a converted rollout was seeded again"
+
 # Remove, with a pre-plugin install that shares Codex's hooks file with a hook of the user's and
 # still publishes to a memory: funes's entries go — the publishing one with them — and the user's
 # stay, in a file written on one line, the way an editor or a tool may leave it.

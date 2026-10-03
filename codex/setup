@@ -68,7 +68,10 @@ seed() {
     [ -d "$sessions" ] || return 0
     find "$sessions" -name 'rollout-*.jsonl' | while IFS= read -r src; do
         stem=${src##*/}
-        "$PLUGIN_DIR/convert" "$src" "$spool/${stem%.jsonl}.funes.jsonl" || true
+        out="$spool/${stem%.jsonl}.funes.jsonl"
+        # A conversion newer than its rollout is current — a re-run seeds only what changed.
+        [ -f "$out" ] && [ "$out" -nt "$src" ] && continue
+        "$PLUGIN_DIR/convert" "$src" "$out" || true
     done
 }
 

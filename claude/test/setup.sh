@@ -60,6 +60,12 @@ mcp add funes -s user -e HF_HUB_USER_AGENT_ORIGIN=funes; agent/claude -- funes m
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "claude was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 
+# A conversion newer than its transcript is current: a re-run leaves it alone.
+printf sentinel >"$FUNES_HOME/spool/claude/session.funes.jsonl"
+touch -t 204001010000 "$FUNES_HOME/spool/claude/session.funes.jsonl"
+"$setup" add acme/kb >/dev/null
+[ "$(cat "$FUNES_HOME/spool/claude/session.funes.jsonl")" = sentinel ] || fail "a converted session was seeded again"
+
 # Re-run to bind the local memory: the file goes, and so do the boundary hooks.
 "$setup" add >/dev/null
 [ ! -e "$plugin/funes/scripts/memory" ] || fail "the memory file was left stale"
