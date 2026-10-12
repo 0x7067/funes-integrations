@@ -1,5 +1,5 @@
 #!/bin/sh
-# `setup add` installs the hooks-only plugin, leaves the memory in a file beside its script, and
+# `setup add` installs the skill and hooks plugin, leaves the memory in a file beside its script, and
 # registers both surfaces with Claude; `setup remove` takes them back, a pre-registry install with
 # them, and never the memory. Run as funes runs it: from the bundle's place in the registry, with
 # the contract's environment, against a `claude` that only records what it is asked.

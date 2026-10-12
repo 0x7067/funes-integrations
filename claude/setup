@@ -1,6 +1,6 @@
 #!/bin/sh
 # funes's Claude Code integration: register `funes mcp` as a user-scoped MCP server, and install a
-# hooks-only plugin that indexes each turn and, with a memory bound, publishes at session
+# plugin with a memory skill and hooks that index each turn and, with a memory bound, publish at session
 # boundaries. funes never edits the user's settings.json.
 set -eu
 
