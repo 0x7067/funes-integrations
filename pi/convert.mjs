@@ -4,10 +4,10 @@
 //
 // Usage: convert.mjs <session.jsonl | sessions-root> <spool-dir>
 //
-// Also a module — `convert` for one session, `convertTree` for a whole store, and `convertLive`
-// for the session pi is writing, which the extension calls every turn and which converts only what
-// the turn added — so a session converted mid-run and one converted in bulk go through the same
-// mapping. It uses nothing but the JS runtime pi already provides.
+// Also a module — `convert` for one session, `convertLive` for the session pi is writing, a turn's
+// lines at a time, `convertTree` for a whole store — so a session converted mid-run and one
+// converted in bulk go through the same mapping. It uses nothing but the JS runtime pi already
+// provides.
 //
 // `session_id` is the session file's stem, not the id on its `session` line: the stem is what funes
 // keyed pi's sessions by while it parsed them itself, and changing it would re-key every session a
@@ -205,27 +205,17 @@ function turnsFrom(records, at) {
 }
 
 const stemOf = (sessionPath) => basename(sessionPath).replace(/\.jsonl$/, "");
-const outFor = (outArg, stem) =>
-  outArg.endsWith(".funes.jsonl") ? outArg : join(outArg, `${stem}.funes.jsonl`);
-const linesOf = (turns) => turns.map((t) => JSON.stringify(t) + "\n").join("");
-// The same, as the bytes the turns file holds.
-const encode = (turns) => Buffer.from(linesOf(turns));
+const encode = (turns) => Buffer.from(turns.map((t) => JSON.stringify(t) + "\n").join(""));
+const parse = (raw, from, to) => parseRecords(raw.toString("utf8", from, to));
 
 /** One session into `<spool>/<stem>.funes.jsonl`; returns the path written. */
 export function convert(sessionPath, outArg) {
-  const stem = stemOf(sessionPath);
-  return writeTurns(sessionPath, outFor(outArg, stem), linesOf(turnsOf(sessionPath, stem)));
+  return writeTurns(sessionPath, outArg, encode(turnsOf(sessionPath, stemOf(sessionPath))));
 }
 
 // The session pi is writing, as far as it is converted: its bytes through the last whole line, the
-// turns-file lines they make, kept encoded so a turn encodes only its own, and where converting
-// them got to.
+// turns-file bytes they make, and where converting them got to.
 let live;
-
-/** Let go of the session `convertLive` holds: pi has ended it, or moved to one with no file. */
-export function forgetLive() {
-  live = undefined;
-}
 
 /** `convert` for the session pi is writing, which only grows: what it converts is the lines added
  * since the last call, while the turns file is still written whole, the same bytes `convert`
@@ -241,31 +231,25 @@ export function convertLive(sessionPath, outArg) {
   if (!kept) live = { path: sessionPath, read: raw.subarray(0, 0), lines: [], at: start(stem) };
 
   // A newline byte is never part of a longer character, so a run of whole lines decodes as the same
-  // lines do in the whole file.
+  // lines do in the whole file. A last line without its newline may still be being written: it is
+  // converted for this file, not kept.
   const end = raw.lastIndexOf(10) + 1;
-  if (end > live.read.length) {
-    const at = { ...live.at };
-    const added = turnsFrom(parseRecords(raw.toString("utf8", live.read.length, end)), at);
-    const read = raw.subarray(0, end);
-    if (added) live = { path: sessionPath, read, lines: [...live.lines, encode(added)], at };
-    else {
-      const fresh = start(stem);
-      const lines = [encode(turnsFrom(parseRecords(raw.toString("utf8", 0, end)), fresh))];
-      live = { path: sessionPath, read, lines, at: fresh };
-    }
+  const at = { ...live.at };
+  const added = turnsFrom(parse(raw, live.read.length, end), at);
+  const tail = added && turnsFrom(parse(raw, end), { ...at });
+  if (!tail) {
+    live = undefined; // a session header after a turn: its cwd belongs on the turns already written
+    return convert(sessionPath, outArg);
   }
-  // A last line without its newline may still be being written: converted for this file, not kept.
-  let lines = live.lines;
-  if (end < raw.length) {
-    const tail = turnsFrom(parseRecords(raw.toString("utf8", end)), { ...live.at });
-    if (tail) lines = [...lines, encode(tail)];
-    else lines = [encode(turnsFrom(parseRecords(raw.toString("utf8")), start(stem)))];
-  }
-  return writeTurns(sessionPath, outFor(outArg, stem), Buffer.concat(lines));
+  const lines = [...live.lines, encode(added)];
+  live = { path: sessionPath, read: raw.subarray(0, end), lines, at };
+  return writeTurns(sessionPath, outArg, Buffer.concat([...lines, encode(tail)]));
 }
 
-// The turns file at `out`, written atomically and stamped with the session's own time.
-function writeTurns(sessionPath, out, body) {
+// A session's turns file, `body`, at `<spool>/<stem>.funes.jsonl`; returns the path written.
+function writeTurns(sessionPath, outArg, body) {
+  const stem = stemOf(sessionPath);
+  const out = outArg.endsWith(".funes.jsonl") ? outArg : join(outArg, `${stem}.funes.jsonl`);
   // Atomic, and the temporary name is not a `.jsonl` one, so a concurrent `funes index` over the
   // spool never lists it.
   const tmp = `${out}.tmp${process.pid}`;
