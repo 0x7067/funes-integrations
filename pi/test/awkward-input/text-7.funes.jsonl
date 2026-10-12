@@ -1,3 +1,0 @@
-{"format":1,"session_id":"text-7","cwd":"/home/café","turn_uuid":"/slash","parent_uuid":" ","seq":0,"ts":"té","role":"user","blocks":[{"block_type":"text","text":"café"}],"harness":"pi"}
-{"format":1,"session_id":"text-7","cwd":"/home/café","turn_uuid":"\n\n\n","seq":1,"ts":"","role":"user","blocks":[{"block_type":"text","text":"  x"}],"harness":"pi"}
-{"format":1,"session_id":"text-7","cwd":"/home/café","turn_uuid":"é","parent_uuid":" ","seq":2,"ts":"2026-01-01T00:00:00.000Z","role":"user","blocks":[{"block_type":"text","text":"/slash"}],"harness":"pi"}

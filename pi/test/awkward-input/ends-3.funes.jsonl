@@ -1,7 +1,0 @@
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"\u000b\f","seq":0,"ts":"2026-10-01T10:06:12.728Z","role":"assistant","blocks":[{"block_type":"thinking","text":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"","seq":1,"ts":"té","role":"tool","blocks":[{"block_type":"tool_result","text":"\u0000nul\n\\u2028 literal"}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"　 ","seq":2,"ts":"2026-01-01T00:00:00.000Z","role":"assistant","blocks":[{"block_type":"thinking","text":"\"quoted\""}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"\n\n\n","seq":3,"ts":"","role":"user","blocks":[{"block_type":"text","text":"\\u2028 literal"}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"","seq":4,"ts":"2026-01-01T00:00:00.000Z","role":"tool","blocks":[{"block_type":"tool_result","text":"\\"}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":"\\","parent_uuid":" ","seq":5,"ts":"","role":"assistant","blocks":[{"block_type":"text","text":"  x"},{"block_type":"thinking","text":""},{"block_type":"text","text":"/slash"}],"harness":"pi"}
-{"format":1,"session_id":"ends-3","cwd":"/home/café","turn_uuid":" ","parent_uuid":"\\u2028 literal","seq":6,"ts":"","role":"assistant","blocks":[{"block_type":"text","text":"plain ascii"}],"harness":"pi"}

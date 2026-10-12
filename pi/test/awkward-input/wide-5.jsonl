@@ -1,42 +1,0 @@
-{"type":"session","version":3,"id":"s","timestamp":"2026-01-01T00:00:00.000Z","cwd":"/home/café"}
-{"type":"model_change","id":"m"}
-{"type":"message","id":" ","timestamp":1790849172728,"message":{"role":"toolResult","content":null}}
-{"type":"message","type":"message","id":"\b\u0008","parentId":null,"timestamp":null,"message":{"role":"toolResult","content":"\u007f","toolName":"  x","toolCallId":""}}
-{"type":"message","id":"","parentId":" ","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"custom","content":"\\"}}
-{"type":"message","id":"\u001b[31mred\u001b[0m","parentId":" ","timestamp":1790849172728,"message":{"role":"user","content":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}}
-{"type":"message","id":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","timestamp":"té","message":{"role":"custom","content":[{"type":"text","text":"— dash ✓"},{"type":"text"},{"type":"text","text":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}]}}
-{"type":"message","id":"\u001b[31mred\u001b[0m","timestamp":1790849172728,"message":{"role":"system","content":" ","toolName":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","toolCallId":"café"}}
-{"type":"session","version":3,"id":"s","timestamp":"t","cwd":"\\u2028 literal"}
-{"type":"message","type":"message","id":"\u0000nul","parentId":"😀 emoji","timestamp":"té","message":{"role":"toolResult","content":["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",{"type":"image"}]}}
-{"type":"message","id":"\u007f","parentId":null,"timestamp":1790849172728,"message":{"role":"custom","content":" "}}
-{"type":"message","id":"\u0000nul","parentId":"café","timestamp":"té","message":{"role":"assistant","content":[{"type":"toolCall","id":"c1","name":"x"},{"type":"text","text":"\u007f"}]}}
-{"type":"message","id":"\u0000nul","parentId":"\\u2028 literal","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"toolResult","content":null}}
-{"type":"message","id":"café","parentId":null,"timestamp":"té","message":{"role":"assistant","content":[]}}
-{"type":"message","id":"\u0000nul","parentId":null,"timestamp":null,"message":{"role":"custom","content":[{"type":"text","text":"\n\n\n"},{"type":"thinking","thinking":"\u007f"}]}}
-{"type":"message","id":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","parentId":null,"timestamp":1e400,"message":{"role":"assistant","content":[{"type":"text","text":"　 "},{"type":"thinking","thinking":"— dash ✓"},{"type":"text","text":5}]}}
-{"type":"session","version":3,"id":"s","timestamp":"t","cwd":"\"quoted\""}
-{"type":"message","id":"  x","timestamp":1790849172728,"message":{"role":"assistant","content":[]}}
-{"type":"message","id":" ","parentId":"\u007f","timestamp":1e400,"message":{"role":"user","content":[],"toolName":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","toolCallId":"café"}}
-{"type":"message","id":"\t \r\n","parentId":"— dash ✓","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"assistant","content":[{"type":"text","text":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}]}}
-{"type":"message","id":"\"quoted\"","timestamp":"té","message":{"role":"system","content":[]}}
-{"type":"message","id":"w","timestamp":"t","message":{"role":"user","content":[{"type":"text","text":"caf\u00e9 \u2713"}]}}
-{"type":"message","id":"  x","timestamp":null,"message":{"role":"custom","content":[{"type":"toolCall","id":"","name":"bash","arguments":""},{"type":"toolCall","id":"c1","name":"x"},{"type":"text","text":"\b\u0008"}]}}
-{"type":"message","id":"\u007f","parentId":null,"timestamp":1e400,"message":{"role":"toolResult","content":"😀 emoji"}}
-{"type":"message","id":"　 ","timestamp":1790849172728,"message":{"role":"custom","content":[{"type":"text","text":""},{"type":"toolCall","id":"\n\n\n","name":"bash","arguments":"\t \r\n"}]}}
-{"type":"message","type":"message","id":" ","parentId":null,"timestamp":null,"message":{"role":"assistant","content":"\"quoted\""}}
-{"type":"message","id":"😀 emoji","timestamp":"té","message":{"role":"assistant","content":[{"type":"toolCall","id":"c1","name":"x"},{"type":"thinking","thinking":""},{"type":"text","text":"\u001b[31mred\u001b[0m"}],"toolName":"😀 emoji","toolCallId":"\u0000nul"}}
-{"type":"message","id":"\\u2028 literal","timestamp":1790849172728,"message":{"role":"user","content":[{"type":"toolCall","id":"\u0000nul","name":"bash","arguments":"\u007f"},"plain ascii",{"type":"text","text":"plain ascii"}]}}
-{"type":"message","id":"\"quoted\"","parentId":"\"quoted\"","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"system","content":[]}}
-{"type":"message","id":" ","timestamp":null,"message":{"role":"toolResult","content":null}}
-{"type":"message","id":"café","timestamp":1e400,"message":{"role":"system","content":[{"type":"text"}],"toolName":"\"quoted\"","toolCallId":"\/slash"}}
-{"type":"message","id":"\u000b\f","parentId":null,"timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"user","content":[{"type":"toolCall","id":"😀 emoji","name":"bash","arguments":" "}]}}
-{"type":"message","id":"\/slash","parentId":"\"quoted\"","timestamp":1e400,"message":{"role":"toolResult","content":["éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"]}}
-{"type":"message","id":"\\u2028 literal","timestamp":1790849172728,"message":{"role":"toolResult","content":null,"toolName":"　 ","toolCallId":"  x"}}
-{"type":"message","id":" ","parentId":null,"timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"custom","content":[{"type":"text","text":"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"},{"type":"toolCall","id":" ","name":"bash","arguments":-0},{"type":"toolCall","id":"plain ascii","name":"bash","arguments":1}],"toolName":"  x","toolCallId":" "}}
-{"type":"message","id":"\\","parentId":null,"timestamp":1e400,"message":{"role":"user","content":["str",{"type":"toolCall","id":"\b\u0008","name":"bash","arguments":"😀 emoji"}]}}
-{"type":"session","version":3,"id":"s","timestamp":"t","cwd":"\u007f"}
-{"type":"message","id":"  x","parentId":"café","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"toolResult","content":[{"type":"image"},{"type":"text","text":"café"}]}}
-{"type":"message","id":"\u0000nul","parentId":null,"timestamp":"té","message":{"role":"user","content":"\n\n\n"}}
-{"type":"session","version":3,"id":"s","timestamp":"t","cwd":""}
-{"type":"message","id":"— dash ✓","parentId":"","timestamp":1e400,"message":{"role":"toolResult","content":null}}
-{"type":"message","id":"\u0000nul","timestamp":"2026-01-01T00:00:00.000Z","message":{"role":"toolResult","content":[{"type":"text","text":" "}],"toolName":"\n\n\n","toolCallId":"\b\u0008"}}

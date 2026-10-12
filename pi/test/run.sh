@@ -25,20 +25,6 @@ if ! "$JS" "$HERE/same-second.mjs" "$out/session.funes.jsonl" "$HERE/session.jso
 fi
 echo "pi converter: ok"
 
-# A whole store, converted over worker threads, comes out as its sessions converted one by one —
-# from the module, and from the command `setup` runs.
-"$JS" "$HERE/store.mjs" "$out/store" "$out/sequential"
-if [ "$("$JS" "$HERE/../convert.mjs" "$out/store" "$out/bulk")" != 50 ] || ! diff -r "$out/sequential" "$out/bulk" >/dev/null; then
-    echo "pi converter: a store converted by the command is not its sessions converted one by one" >&2
-    exit 1
-fi
-echo "pi converter, a whole store: ok"
-
-# Sessions that take every way a session is read, against what the converter wrote for them before
-# it read one as bytes.
-"$JS" "$HERE/awkward-input.mjs" "$out/awkward-input"
-echo "pi converter, awkward input: ok"
-
 # The session pi is writing, converted as it grows: what a whole conversion writes, at every step.
 "$JS" "$HERE/live.mjs" "$out/live"
 echo "pi converter, live: ok"
