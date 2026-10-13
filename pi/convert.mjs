@@ -4,9 +4,10 @@
 //
 // Usage: convert.mjs <session.jsonl | sessions-root> <spool-dir>
 //
-// Also a module — `convert` for one session, `convertTree` for a whole store — so a session
-// converted mid-run and one converted in bulk go through the same mapping. It uses nothing but the
-// JS runtime pi already provides.
+// Also a module — `convert` for one session, `convertLive` for the session pi is writing, a turn's
+// lines at a time, `convertTree` for a whole store — so a session converted mid-run and one
+// converted in bulk go through the same mapping. It uses nothing but the JS runtime pi already
+// provides.
 //
 // `session_id` is the session file's stem, not the id on its `session` line: the stem is what funes
 // keyed pi's sessions by while it parsed them itself, and changing it would re-key every session a
@@ -15,6 +16,7 @@
 import { readFileSync, writeFileSync, renameSync, mkdirSync, readdirSync, statSync, realpathSync, utimesSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { Buffer } from "node:buffer";
 
 const HARNESS = "pi";
 const FORMAT = 1;
@@ -47,8 +49,13 @@ const str = (v) => (typeof v === "string" ? v : undefined);
 
 /** Every parseable JSON object of a JSONL file, in file order (`jsonl::read_jsonl_records`). */
 function readRecords(path) {
+  return parseRecords(readFileSync(path, "utf8"));
+}
+
+// The same, of the text of a file, or of a run of its whole lines.
+function parseRecords(text) {
   const records = [];
-  for (let line of readFileSync(path, "utf8").split("\n")) {
+  for (let line of text.split("\n")) {
     if (line.endsWith("\r")) line = line.slice(0, -1); // Rust's `str::lines`
     line = rustTrim(line);
     if (line === "") continue;
@@ -151,12 +158,28 @@ function timestamp(value) {
 }
 
 export function turnsOf(sessionPath, sessionId) {
-  const records = readRecords(sessionPath);
-  const header = records.find((r) => isObject(r) && r.type === "session");
-  const cwd = header ? str(header.cwd) : undefined;
+  return turnsFrom(readRecords(sessionPath), start(sessionId));
+}
+
+/** Where converting a session has got to, which a later part of it is converted from: its id, its
+ * cwd once the session header is read, and how many turns are written. */
+function start(sessionId) {
+  return { id: sessionId, header: false, cwd: undefined, seq: 0 };
+}
+
+/** The turns `records` make, converted from `at` and advancing it; nothing when they hold the
+ * session header and a turn is written already, which the header's cwd belongs on. */
+function turnsFrom(records, at) {
+  if (!at.header) {
+    const header = records.find((r) => isObject(r) && r.type === "session");
+    if (header) {
+      if (at.seq > 0) return undefined;
+      at.header = true;
+      at.cwd = str(header.cwd);
+    }
+  }
 
   const turns = [];
-  let seq = 0;
   for (const record of records) {
     if (!isObject(record) || record.type !== "message") continue;
     const msg = record.message;
@@ -166,12 +189,12 @@ export function turnsOf(sessionPath, sessionId) {
     if (blocks.length === 0) continue;
 
     // Field order is the wire order of funes's own Turn.
-    const turn = { format: FORMAT, session_id: sessionId };
-    if (cwd !== undefined) turn.cwd = cwd;
+    const turn = { format: FORMAT, session_id: at.id };
+    if (at.cwd !== undefined) turn.cwd = at.cwd;
     turn.turn_uuid = str(record.id) ?? "";
     const parent = str(record.parentId);
     if (parent !== undefined) turn.parent_uuid = parent;
-    turn.seq = seq++;
+    turn.seq = at.seq++;
     turn.ts = timestamp(record.timestamp);
     turn.role = nativeRole === "toolResult" ? "tool" : nativeRole;
     turn.blocks = blocks;
@@ -181,13 +204,52 @@ export function turnsOf(sessionPath, sessionId) {
   return turns;
 }
 
+const stemOf = (sessionPath) => basename(sessionPath).replace(/\.jsonl$/, "");
+const encode = (turns) => Buffer.from(turns.map((t) => JSON.stringify(t) + "\n").join(""));
+const parse = (raw, from, to) => parseRecords(raw.toString("utf8", from, to));
+
 /** One session into `<spool>/<stem>.funes.jsonl`; returns the path written. */
 export function convert(sessionPath, outArg) {
-  const stem = basename(sessionPath).replace(/\.jsonl$/, "");
+  return writeTurns(sessionPath, outArg, encode(turnsOf(sessionPath, stemOf(sessionPath))));
+}
+
+// The session pi is writing, as far as it is converted: its bytes through the last whole line, the
+// turns-file bytes they make, and where converting them got to.
+let live;
+
+/** `convert` for the session pi is writing, which only grows: what it converts is the lines added
+ * since the last call, while the turns file is still written whole, the same bytes `convert`
+ * writes. A file whose start is not what was converted — another session, or this one rewritten —
+ * is converted afresh. The session is held in memory for it, as read and as converted. */
+export function convertLive(sessionPath, outArg) {
+  const stem = stemOf(sessionPath);
+  const raw = readFileSync(sessionPath);
+  const kept =
+    live?.path === sessionPath &&
+    raw.length >= live.read.length &&
+    raw.compare(live.read, 0, live.read.length, 0, live.read.length) === 0;
+  if (!kept) live = { path: sessionPath, read: raw.subarray(0, 0), lines: [], at: start(stem) };
+
+  // A newline byte is never part of a longer character, so a run of whole lines decodes as the same
+  // lines do in the whole file. A last line without its newline may still be being written: it is
+  // converted for this file, not kept.
+  const end = raw.lastIndexOf(10) + 1;
+  const at = { ...live.at };
+  const added = turnsFrom(parse(raw, live.read.length, end), at);
+  const tail = added && turnsFrom(parse(raw, end), { ...at });
+  if (!tail) {
+    live = undefined; // a session header after a turn: its cwd belongs on the turns already written
+    return convert(sessionPath, outArg);
+  }
+  const lines = [...live.lines, encode(added)];
+  live = { path: sessionPath, read: raw.subarray(0, end), lines, at };
+  return writeTurns(sessionPath, outArg, Buffer.concat([...lines, encode(tail)]));
+}
+
+// A session's turns file, `body`, at `<spool>/<stem>.funes.jsonl`; returns the path written.
+function writeTurns(sessionPath, outArg, body) {
+  const stem = stemOf(sessionPath);
   const out = outArg.endsWith(".funes.jsonl") ? outArg : join(outArg, `${stem}.funes.jsonl`);
-  const body = turnsOf(sessionPath, stem)
-    .map((t) => JSON.stringify(t) + "\n")
-    .join("");
   // Atomic, and the temporary name is not a `.jsonl` one, so a concurrent `funes index` over the
   // spool never lists it.
   const tmp = `${out}.tmp${process.pid}`;

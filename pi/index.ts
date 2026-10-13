@@ -32,7 +32,7 @@ import { existsSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync }
 import { fileURLToPath } from "node:url";
 import { dirname, join, sep } from "node:path";
 
-import { convert, convertTree } from "./convert.mjs";
+import { convertLive, convertTree } from "./convert.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FUNES_BIN = process.env.FUNES_BIN || "funes";
@@ -230,7 +230,7 @@ function convertSession(ctx: any): string {
   try {
     const file = ctx?.sessionManager?.getSessionFile?.();
     if (file) {
-      convert(file, SPOOL);
+      convertLive(file, SPOOL);
       return file;
     }
   } catch {}

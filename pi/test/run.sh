@@ -25,6 +25,10 @@ if ! "$JS" "$HERE/same-second.mjs" "$out/session.funes.jsonl" "$HERE/session.jso
 fi
 echo "pi converter: ok"
 
+# The session pi is writing, converted as it grows: what a whole conversion writes, at every step.
+"$JS" "$HERE/live.mjs" "$out/live"
+echo "pi converter, live: ok"
+
 # The extension's startup, run as pi runs it: node strips the types itself from 22.18 on; bun and
 # deno always did.
 case "$JS" in
