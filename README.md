@@ -39,6 +39,29 @@ What funes guarantees around these — local-first indexing, one writer at a tim
 the wrong-memory guard — is in funes's
 [automation docs](https://github.com/huggingface/funes/blob/main/docs/automation.md).
 
+## Converting by hand
+
+Indexing an agent's history on a machine that never ran the automation — an archive, a colleague's
+export — is the bundle's converter into a directory of your own, then `funes index` on that
+directory, as funes's [add docs](https://github.com/huggingface/funes/blob/main/docs/add.md#converting-by-hand)
+describe. Each converter is its bundle's own, and emits the session and turn ids the hooks do.
+`<bundle>` is `~/.funes/agents/<id>` once `funes add <id>` has run on any machine, or `<id>/` in
+this checkout:
+
+| Bundle | Converter |
+| --- | --- |
+| `claude` | `<bundle>/claude-plugin/funes/convert <transcript.jsonl> [out.funes.jsonl]` — needs jq; one argument prints to stdout |
+| `codex` | `<bundle>/codex-plugin/plugins/funes/convert <rollout.jsonl> [out.funes.jsonl]` — needs jq; one argument prints to stdout |
+| `pi` | `node <bundle>/convert.mjs <session.jsonl \| sessions-root> <out-dir>` — a root converts every session under it |
+| `hermes` | `python3 <bundle>/plugin/convert.py <state.db> <out-dir> [session-id]` — every session in the store unless one is named |
+
+```bash
+for t in /archive/.claude/projects/*/*.jsonl; do
+    ~/.funes/agents/claude/claude-plugin/funes/convert "$t" ~/imports/"$(basename "$t" .jsonl)".funes.jsonl
+done
+funes index ~/imports
+```
+
 ## Developing
 
 A working copy installs into funes straight from the checkout:
