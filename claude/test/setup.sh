@@ -41,6 +41,8 @@ run_script='sh "${CLAUDE_PLUGIN_ROOT}/scripts/funes-index.sh"'
 grep -q "installed funes into Claude Code" "$tmp/add.out" || fail "add did not report: $(cat "$tmp/add.out")"
 [ -f "$plugin/.claude-plugin/marketplace.json" ] || fail "no marketplace manifest"
 [ -f "$plugin/funes/.claude-plugin/plugin.json" ] || fail "no plugin manifest"
+# The skill Claude loads from the plugin rides beside its hooks.
+grep -q "name: funes" "$plugin/funes/skills/funes/SKILL.md" || fail "no skill in the plugin"
 [ -x "$plugin/funes/scripts/funes-index.sh" ] || fail "the hook script is not executable"
 # The plugin's own script per turn and for a sub-agent; the same script publishes at both boundaries.
 [ "$(jq -r '.hooks.Stop[0].hooks[0].command' "$hooks")" = "$run_script" ] || fail "Stop: $(cat "$hooks")"
