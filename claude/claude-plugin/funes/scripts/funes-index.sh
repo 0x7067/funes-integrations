@@ -86,8 +86,8 @@ convert_stale() {
 
 # The boundary's second half: land the turns in the memory, waiting out a per-turn worker that may
 # still hold its lock, then push them to the memory `setup add` recorded beside this script. A first
-# push to a memory this index shares no chunks with is refused off a terminal. `funes bind` or
-# `funes add` clears it once, interactively.
+# push to a memory this index shares no chunks with is refused off a terminal. funes does it once,
+# interactively, when it binds the memory.
 publish() {
     for attempt in 1 2 3 4 5; do
         if "$funes" index --harness "$HARNESS" >>"$LOG" 2>&1; then

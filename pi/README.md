@@ -23,16 +23,12 @@ Once `funes` is on your PATH, one command extracts this extension to a fixed
 `~/.funes/agents/pi` and registers it with pi, user-wide:
 
 ```sh
-funes add pi                  # on the memory this host is bound to, else local
-funes add pi <org>/<repo>     # binds this host to the memory first
+funes add pi
 ```
 
 funes installs the extension from its published release and brings it to the
 newest one on every run; `funes add pi --from ./pi` installs this checkout's
-copy, which then runs as installed until named again. Re-running `funes add pi`
-refreshes the extension on the host's memory. Naming a memory, or `local`, binds
-the host to it first, as `funes bind <memory>` does on its own: every installed
-agent follows, by the same setup.
+copy, which then runs as installed until named again.
 
 For development you can also install the package directly with `pi install ./pi`,
 or load it for a single run with `pi -e ./pi`.
@@ -53,9 +49,10 @@ pi's own sessions are untouched.
   declare. `funes add pi` refuses to register the extension on an older pi rather than leave you
   with tools that reject their own calls.
 - A funes memory the binary can read — local, or a live `hf://` remote (needs network + an HF
-  token for a private remote). Bind this host to one with `funes add pi <memory>`, or
-  `funes bind <memory>`. The extension keeps a copy beside itself, and `FUNES_MEMORY` overrides it
-  for a run: forwarded as the `funes mcp <memory>` positional, and used as the publish target.
+  token for a private remote). Which one is funes's to bind:
+  [docs/add.md](https://github.com/huggingface/funes/blob/main/docs/add.md#binding-a-memory).
+  `FUNES_MEMORY` overrides it for a run: forwarded as the `funes mcp <memory>` positional, and used
+  as the publish target.
 
 The extension declares no dependencies: it talks to `funes mcp` over stdio and to pi through the
 extension API pi's loader provides.

@@ -26,8 +26,7 @@ indexes — waiting out a per-turn run's lock — and pushes; it runs at the ses
 the next start, catching up whatever a missed end left behind. The conversion is the bundle's own
 converter: a script for Claude Code and Codex, the extension or plugin itself for pi and Hermes. The
 work runs detached, so a hook returns in well under a second and never blocks the turn or trips a
-timeout. The memory rides in a file beside the scripts, so every hooks file is static: the bundle's
-copy of the host's binding, which `funes add` and `funes bind` rewrite when they run its setup.
+timeout. The memory rides in a file beside the scripts, so every hooks file is static.
 
 | Bundle | Per turn | Publish, with a memory bound |
 | --- | --- | --- |

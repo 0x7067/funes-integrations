@@ -84,7 +84,7 @@ drop_legacy() {
 }
 
 add() {
-    # The host's memory, for index.ts to read at startup; absent is the local memory.
+    # The memory index.ts reads at startup; absent is the local memory.
     if [ -n "${1:-}" ]; then
         printf '%s\n' "$1" >"$HERE/memory"
     else
