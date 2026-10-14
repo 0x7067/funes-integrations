@@ -1,6 +1,6 @@
 #!/bin/sh
-# funes's pi integration: register this directory with pi as an extension, bind the memory it
-# recalls from and publishes to, and convert the sessions pi has already written.
+# funes's pi integration: register this directory with pi as an extension, copy beside it the
+# memory it recalls from and publishes to, and convert the sessions pi has already written.
 #
 # pi has no MCP client, so index.ts is one: it spawns `funes mcp` over stdio and registers whatever
 # tools/list returns. It also converts each finished turn into the spool funes indexes.
@@ -84,7 +84,7 @@ drop_legacy() {
 }
 
 add() {
-    # The memory index.ts reads at startup; absent is the local memory.
+    # The host's memory, for index.ts to read at startup; absent is the local memory.
     if [ -n "${1:-}" ]; then
         printf '%s\n' "$1" >"$HERE/memory"
     else

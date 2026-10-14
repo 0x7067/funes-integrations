@@ -18,14 +18,15 @@ repository's [README](../README.md#how-the-bundles-automate).
 Once `funes` is on your PATH:
 
 ```sh
-funes add hermes                   # local memory
-funes add hermes <org>/<repo>      # …bound to a memory it recalls from and publishes to
+funes add hermes                   # on the memory this host is bound to, else local
+funes add hermes <org>/<repo>      # binds this host to the memory first, as `funes bind` does
 ```
 
 funes installs the plugin from its published release and brings it to the newest one on every run;
 `funes add hermes --from ./hermes` installs this checkout's copy, which then runs as installed until
-named again. Re-running `funes add hermes` keeps the memory bound (`funes add hermes local` unbinds
-it) and refreshes the plugin.
+named again. Re-running `funes add hermes` refreshes the plugin on the host's memory. Naming a
+memory, or `local`, binds the host to it first, as `funes bind <memory>` does on its own: every
+installed agent follows, by the same setup.
 
 An install from before the plugin declared funes's hooks as shell hooks in your `config.yaml`.
 `funes add hermes` clears it: those entries come out of the file — the one edit funes makes there;
@@ -49,4 +50,5 @@ own session store are untouched.
 - `python3` on `PATH` at install, to convert the sessions Hermes has already recorded; without it
   they are converted as each session ends.
 - A funes memory the binary can read — local, or a live `hf://` remote (needs network + an HF
-  token for a private remote). Bind one with `funes add hermes <memory>`.
+  token for a private remote). Bind this host to one with `funes add hermes <memory>`, or
+  `funes bind <memory>`.

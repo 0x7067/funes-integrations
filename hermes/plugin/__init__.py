@@ -3,9 +3,9 @@
 Each completed turn is converted out of hermes's SQLite store into the turns file funes indexes, in
 this process — it is a read and an atomic write — and the index is spawned detached and forgotten,
 as is the publish at a session boundary, so nothing here waits on an embedder or a network. The
-publish takes its memory from the `memory` file beside this plugin, written by
-`funes add hermes <memory>`; with no memory bound, the file is absent and the publish hooks are not
-registered.
+publish takes its memory from the `memory` file beside this plugin, where `funes add hermes` and
+`funes bind` copy the memory this host is bound to. On a local host the file is absent, and the
+publish hooks are not registered.
 """
 
 import os

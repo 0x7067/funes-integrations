@@ -40,8 +40,8 @@ index() {
     fi
 }
 
-# A first push to a memory this index shares no chunks with is refused off a terminal; `funes add`
-# clears it once, interactively.
+# A first push to a memory this index shares no chunks with is refused off a terminal. `funes bind`
+# or `funes add` clears it once, interactively.
 publish() {
     memory=${1:-}
     [ -n "$memory" ] || memory=$(head -n 1 "$HERE/memory" 2>/dev/null | tr -d '[:space:]')

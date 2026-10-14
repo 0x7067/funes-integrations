@@ -20,16 +20,17 @@ reading surrounding turns, and checking the indexing backlog when recent work is
 Once `funes` is on your PATH:
 
 ```sh
-funes add claude                   # local memory
-funes add claude <org>/<repo>      # …bound to a memory it recalls from and publishes to
+funes add claude                   # on the memory this host is bound to, else local
+funes add claude <org>/<repo>      # binds this host to the memory first, as `funes bind` does
 ```
 
 funes installs the plugin from its published release and brings it to the newest one on every run;
 `funes add claude --from ./claude` installs this checkout's copy, which then runs as installed until
-named again. Re-running `funes add claude` keeps the memory bound (`funes add claude local` unbinds
-it) and refreshes the plugin — Claude keeps a plugin's content until it is reinstalled, so the
-plugin is uninstalled and installed again. An install from before the registry, at
-`~/.funes/integrations/claude-plugin`, is unregistered and deleted on sight.
+named again. Re-running `funes add claude` refreshes the plugin on the host's memory. Naming a
+memory, or `local`, binds the host to it first, as `funes bind <memory>` does on its own: every
+installed agent follows, by the same setup. Claude keeps a plugin's content until it is
+reinstalled, so the plugin is uninstalled and installed again. An install from before the
+registry, at `~/.funes/integrations/claude-plugin`, is unregistered and deleted on sight.
 
 ## Remove
 
@@ -49,4 +50,5 @@ Your memory and Claude Code's own transcripts are untouched.
   `funes add claude` checks that the jq on PATH converts a transcript the way funes reads it before
   it installs anything.
 - A funes memory the binary can read — local, or a live `hf://` remote (needs network + an HF
-  token for a private remote). Bind one with `funes add claude <memory>`.
+  token for a private remote). Bind this host to one with `funes add claude <memory>`, or
+  `funes bind <memory>`.

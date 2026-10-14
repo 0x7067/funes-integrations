@@ -21,15 +21,16 @@ indexed or published ([Codex docs](https://learn.chatgpt.com/docs/hooks#review-a
 Once `funes` is on your PATH:
 
 ```sh
-funes add codex                    # local memory
-funes add codex <org>/<repo>       # …bound to a memory it recalls from and publishes to
+funes add codex                    # on the memory this host is bound to, else local
+funes add codex <org>/<repo>       # binds this host to the memory first, as `funes bind` does
 ```
 
 funes installs the plugin from its published release and brings it to the newest one on every run;
 `funes add codex --from ./codex` installs this checkout's copy, which then runs as installed until
-named again. Re-running `funes add codex` keeps the memory bound (`funes add codex local` unbinds
-it) and refreshes the plugin. A Codex too old to have plugins stops the install rather than leaving
-it silently unpublished.
+named again. Re-running `funes add codex` refreshes the plugin on the host's memory. Naming a
+memory, or `local`, binds the host to it first, as `funes bind <memory>` does on its own: every
+installed agent follows, by the same setup. A Codex too old to have plugins stops the install
+rather than leaving it silently unpublished.
 
 An install from before the plugin is cleared on sight: its skill and scripts go, and its entries
 come out of Codex's own `hooks.json` — hooks of your own in that file stay, and the file goes only
@@ -54,4 +55,5 @@ an install from before the plugin the same way. Your memory and Codex's own roll
   `funes add codex` checks that the jq on PATH converts a rollout the way funes reads it before it
   installs anything.
 - A funes memory the binary can read — local, or a live `hf://` remote (needs network + an HF
-  token for a private remote). Bind one with `funes add codex <memory>`.
+  token for a private remote). Bind this host to one with `funes add codex <memory>`, or
+  `funes bind <memory>`.

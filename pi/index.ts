@@ -23,8 +23,8 @@
 //
 // The memory this extension recalls from — and publishes to — is resolved once, in order:
 //   1. FUNES_MEMORY in the environment (a per-run override, set by whatever host)
-//   2. the memory bound at install by `funes add pi <memory>`, saved in a `memory`
-//      file next to this extension (absent = the local memory)
+//   2. the memory this host is bound to, which `funes add pi` and `funes bind` copy
+//      into a `memory` file next to this extension (absent = the local memory)
 // The result is forwarded as the `funes mcp <memory>` positional; empty forwards a
 // bare `funes mcp` (the local memory).
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
