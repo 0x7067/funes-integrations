@@ -23,17 +23,18 @@ Use a date or harness filter when the user provides that context.
 
 A recall hit is a passage, not the whole session. If it finds the right session but only shows a
 diff, log, or setup discussion, use `get` around the hit's sequence to read the surrounding turns.
-Use the memory named in its `→ get` line. Once the session is known, `scan` can find a literal phrase
-throughout it without ranking, and `sketch` can help locate its conclusion.
+Pass the `memory` its `→ get` line carries, and none when it carries none, so the drill-down reads
+what the search read. Once the session is known, `scan` can find a literal phrase throughout it
+without ranking, and `sketch` can help locate its conclusion.
 
 If results miss the requested answer, try a focused query or the text filters above before
 concluding that it is absent. If recent work is still missing, check `status` for indexing and
 embedding backlogs: background indexing may not have caught up yet. An unsuccessful search does not
 establish that the work was never discussed.
 
-Omit `memory` to read the server's memory. With a remote bound, that read also covers this host's
-indexed turns not yet pushed to it, so work done on this host is in reach without a push or a
-reindex. Naming a memory reads that memory alone, even when it is the same remote. `memory: "local"`
-reads this host's index alone: it is the way to this host's sessions when the bound memory is one
-this host has never pushed to, and it drops the remote otherwise. Honor a memory the user explicitly
-requests.
+Omit `memory` to read the server's memory, the one this host is bound to. With a remote bound, that
+read also covers this host's indexed turns not yet pushed to it, so work done on this host is in
+reach without a push or a reindex. Naming a memory reads it as it stands, even when it is the bound
+one. `memory: "local"` reads this host's index alone: it is the way to this host's sessions when
+the bound memory is one this host has never pushed to, and it drops the remote otherwise. Honor a
+memory the user explicitly requests.
