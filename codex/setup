@@ -61,15 +61,44 @@ require_jq() {
     fi
 }
 
-# Convert the rollouts Codex has already written, so recall reaches them before the next turn.
+# What the local memory holds, as `<session id> <stamp of its last indexed turn>` lines: the end of
+# each `funes sessions` row, walked a page at a time from the offset each page names. A funes whose
+# rows carry no span (before 1.9.0), or none to ask, lists nothing.
+indexed() {
+    offset=0
+    while [ -n "$offset" ]; do
+        page=$("$FUNES" sessions --memory local --limit 200 --offset "$offset" 2>/dev/null) || return 0
+        printf '%s\n' "$page" | sed -n 's/^\[[^ ]* → \([^]]*\)] .* turns \(.*\)$/\2 \1/p'
+        offset=$(printf '%s\n' "$page" | sed -n 's/.* continue with --offset \([0-9]*\),.*/\1/p')
+    done
+}
+
+# A rollout's last turn as `<session id> <stamp>`, converted from a copy of its first line, which
+# names the session, and its last lines in the directory `$2`. A turn is made from its own line
+# alone, and Codex writes only a few records after the last one.
+last_turn() {
+    sample="$2/${1##*/}"
+    { head -n 1 "$1"; tail -n 32 "$1"; } >"$sample"
+    "$PLUGIN_DIR/convert" "$sample" | tail -n 1 | jq -r '"\(.session_id) \(.ts)"'
+}
+
+# Convert the rollouts Codex has already written, so recall reaches them before the next turn. A
+# rollout whose last turn the memory holds already is left out, so a re-run converts what changed
+# since.
 seed() {
     spool=$1
     sessions="$CODEX_DIR/sessions"
     [ -d "$sessions" ] || return 0
+    work=$(mktemp -d)
+    indexed >"$work/indexed"
     find "$sessions" -name 'rollout-*.jsonl' | while IFS= read -r src; do
+        if [ -s "$work/indexed" ] && grep -qxF -- "$(last_turn "$src" "$work")" "$work/indexed"; then
+            continue
+        fi
         stem=${src##*/}
         "$PLUGIN_DIR/convert" "$src" "$spool/${stem%.jsonl}.funes.jsonl" || true
     done
+    rm -rf "$work"
 }
 
 # The plugin's hooks: a static file per binding, plus the memory in a file the push hook reads. The

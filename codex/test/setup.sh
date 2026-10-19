@@ -36,9 +36,20 @@ hooks="$plugin/hooks.json"
 run_script='sh "${PLUGIN_ROOT}/scripts/funes-index.sh"'
 codex_dir="$HOME/.codex"
 
-# A rollout Codex already wrote — the converter's fixture — for the seed to find.
+# A rollout Codex already wrote — the converter's fixture — for the seed to find. 40 records it makes
+# no turn of follow the line that names the session, so the rollout runs longer than the lines the
+# seed reads to find its last turn.
 mkdir -p "$codex_dir/sessions/2026/09/25"
-cp "$BUNDLE/codex-plugin/plugins/funes/test/session.jsonl" "$codex_dir/sessions/2026/09/25/rollout-seed.jsonl"
+fixture="$BUNDLE/codex-plugin/plugins/funes/test/session.jsonl"
+{
+    head -n 1 "$fixture"
+    i=0
+    while [ $i -lt 40 ]; do
+        echo '{"type":"event_msg","payload":{"type":"token_count"}}'
+        i=$((i + 1))
+    done
+    tail -n +2 "$fixture"
+} >"$codex_dir/sessions/2026/09/25/rollout-seed.jsonl"
 # What an install before the plugin left: hook entries funes wrote in Codex's own file, the scripts
 # they ran, and a skill in Codex's tree and in the shared one an earlier install used.
 mkdir -p "$codex_dir/hooks" "$codex_dir/skills/funes" "$HOME/.agents/skills/funes"
@@ -75,6 +86,53 @@ plugin add funes@huggingface
 mcp add funes --env HF_HUB_USER_AGENT_ORIGIN=funes; agent/codex -- funes mcp acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "codex was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
+
+# A re-run leaves out a rollout whose last turn the local memory holds, and converts one that grew
+# since. With no `funes` to ask, as above, everything was converted.
+cat >"$tmp/bin/funes" <<'FAKE'
+#!/bin/sh
+# `funes sessions` on the local memory, a page per offset: the file under $FUNES_TEST_PAGES named
+# after it.
+[ "$1 $2 $3" = "sessions --memory local" ] || exit 1
+offset=0
+while [ $# -gt 0 ]; do
+    [ "$1" != --offset ] || offset=$2
+    shift
+done
+exec cat "$FUNES_TEST_PAGES/$offset"
+FAKE
+chmod +x "$tmp/bin/funes"
+export FUNES_TEST_PAGES="$tmp/pages"
+mkdir -p "$FUNES_TEST_PAGES"
+# The rollout names its session on its first line, so the id is not the file's stem.
+turns="$BUNDLE/codex-plugin/plugins/funes/test/expected.funes.jsonl"
+id=$(tail -n 1 "$turns" | jq -r .session_id)
+first=$(head -n 1 "$turns" | jq -r .ts)
+last=$(tail -n 1 "$turns" | jq -r .ts)
+# The listing, most recent first: another session, then, on the page the first one's trailer names,
+# the fixture's, ending on $1.
+listing() {
+    cat >"$FUNES_TEST_PAGES/0" <<EOF
+[2026-10-01T09:00:00.000Z → 2026-10-01T09:30:00.000Z] codex /Users/me/other 4 turns other
+  another ask
+---
+1 of 2 sessions — 1 older: continue with --offset 1, or narrow with --repo/--since/--until
+EOF
+    cat >"$FUNES_TEST_PAGES/1" <<EOF
+[$first → $1] codex /Users/me/repo 7 turns $id
+  the ask it opened with
+---
+1 of 2 sessions — the oldest match reached
+EOF
+}
+seeded="$FUNES_HOME/spool/codex/rollout-seed.funes.jsonl"
+rm "$seeded"
+listing "$last"
+"$setup" add acme/kb >/dev/null
+[ ! -e "$seeded" ] || fail "a rollout whose last turn is indexed was converted again"
+listing "$first"
+"$setup" add acme/kb >/dev/null
+[ -f "$seeded" ] || fail "a rollout that grew since its last indexed turn was not converted"
 
 # Remove, with a pre-plugin install that shares Codex's hooks file with a hook of the user's and
 # still publishes to a memory: funes's entries go — the publishing one with them — and the user's

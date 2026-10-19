@@ -25,10 +25,18 @@ export PATH="$tmp/bin:/usr/bin:/bin"
 export FUNES_TEST_CLI_LOG="$tmp/cli.log"
 export FUNES_BIN=funes FUNES_HOME="$HOME/.funes" FUNES_AGENT_ID=claude
 # Claude Code's transcripts live under its config directory, wherever the user put it: the
-# converter's fixture, for the seed to find.
+# converter's fixture, for the seed to find, behind 40 records it makes no turn of, so the transcript
+# runs longer than the lines the seed reads to find its last turn.
 export CLAUDE_CONFIG_DIR="$tmp/claude-config"
 mkdir -p "$CLAUDE_CONFIG_DIR/projects/-Users-me-repo"
-cp "$BUNDLE/claude-plugin/funes/test/session.jsonl" "$CLAUDE_CONFIG_DIR/projects/-Users-me-repo/session.jsonl"
+{
+    i=0
+    while [ $i -lt 40 ]; do
+        echo '{"type":"file-history-snapshot","snapshot":{}}'
+        i=$((i + 1))
+    done
+    cat "$BUNDLE/claude-plugin/funes/test/session.jsonl"
+} >"$CLAUDE_CONFIG_DIR/projects/-Users-me-repo/session.jsonl"
 
 cp -R "$BUNDLE" "$HOME/.funes/agents/claude"
 setup="$HOME/.funes/agents/claude/setup"
@@ -61,6 +69,52 @@ mcp remove funes
 mcp add funes -s user -e HF_HUB_USER_AGENT_ORIGIN=funes; agent/claude -- funes mcp acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "claude was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
+
+# A re-run leaves out a transcript whose last turn the local memory holds, and converts one that
+# grew since. With no `funes` to ask, as above, everything was converted.
+cat >"$tmp/bin/funes" <<'FAKE'
+#!/bin/sh
+# `funes sessions` on the local memory, a page per offset: the file under $FUNES_TEST_PAGES named
+# after it.
+[ "$1 $2 $3" = "sessions --memory local" ] || exit 1
+offset=0
+while [ $# -gt 0 ]; do
+    [ "$1" != --offset ] || offset=$2
+    shift
+done
+exec cat "$FUNES_TEST_PAGES/$offset"
+FAKE
+chmod +x "$tmp/bin/funes"
+export FUNES_TEST_PAGES="$tmp/pages"
+mkdir -p "$FUNES_TEST_PAGES"
+turns="$BUNDLE/claude-plugin/funes/test/expected.funes.jsonl"
+id=$(tail -n 1 "$turns" | jq -r .session_id)
+first=$(head -n 1 "$turns" | jq -r .ts)
+last=$(tail -n 1 "$turns" | jq -r .ts)
+# The listing, most recent first: another session, then, on the page the first one's trailer names,
+# the fixture's, ending on $1.
+listing() {
+    cat >"$FUNES_TEST_PAGES/0" <<EOF
+[2026-10-01T09:00:00.000Z → 2026-10-01T09:30:00.000Z] claude /Users/me/other 4 turns other
+  another ask
+---
+1 of 2 sessions — 1 older: continue with --offset 1, or narrow with --repo/--since/--until
+EOF
+    cat >"$FUNES_TEST_PAGES/1" <<EOF
+[$first → $1] claude /Users/me/repo 5 turns $id
+  the ask it opened with
+---
+1 of 2 sessions — the oldest match reached
+EOF
+}
+seeded="$FUNES_HOME/spool/claude/session.funes.jsonl"
+rm "$seeded"
+listing "$last"
+"$setup" add acme/kb >/dev/null
+[ ! -e "$seeded" ] || fail "a transcript whose last turn is indexed was converted again"
+listing "$first"
+"$setup" add acme/kb >/dev/null
+[ -f "$seeded" ] || fail "a transcript that grew since its last indexed turn was not converted"
 
 # Re-run to bind the local memory: the file goes, and so do the boundary hooks.
 "$setup" add >/dev/null
