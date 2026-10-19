@@ -25,3 +25,19 @@ jobs:
       # Each bundle's own suite: its converter, its setup and its hooks, driven against fakes.
       - name: Test the bundle
         run: sh "${{ matrix.id }}/test/run.sh"
+
+  hf-traces:
+    name: hf-traces converter
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The converter reads parquet through pyarrow, which the runner's Python does not carry.
+      - name: Test the converter
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyarrow==26.0.0
+          PYTHON="$RUNNER_TEMP/venv/bin/python" sh hf-traces/test/run.sh

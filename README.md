@@ -13,6 +13,9 @@ describes it: a `manifest.json`, a `setup` executable, whatever the integration 
 and its own tests under `test/`. What each one installs into its agent, which of its events it
 hooks, and what it needs on the box is in its README; what they share is below.
 
+`hf-traces/` is the one directory that is not an integration. It converts Hugging Face agent-traces
+datasets, and installs nothing.
+
 ## How the bundles automate
 
 Each bundle gives its agent the funes read tools — `funes mcp` registered as an MCP server, or
@@ -66,6 +69,22 @@ done
 funes index ~/imports
 ```
 
+### Hugging Face agent-traces datasets
+
+The Hub keeps a parquet copy of an agent-traces dataset on its `refs/convert/parquet` branch.
+`hf-traces/convert.py` turns it into one turns file per session. It needs pyarrow, which `uv run`
+installs from the script's own header:
+
+```bash
+hf download <org>/<repo> --repo-type dataset --revision refs/convert/parquet --local-dir traces
+uv run hf-traces/convert.py traces ~/imports
+funes index ~/imports
+```
+
+It maps a session as funes's own reader did when `funes index <org>/<repo>` read these datasets, so
+a dataset a memory already holds keeps its turn ids and a re-import adds nothing. A session id that
+is not a plain file name is reported and skipped.
+
 ## Developing
 
 A working copy installs into funes straight from the checkout:
@@ -79,6 +98,12 @@ Each bundle's tests run without a funes binary, against fakes:
 
 ```sh
 sh pi/test/run.sh
+```
+
+The `hf-traces` test needs pyarrow. `PYTHON` names the interpreter that has it:
+
+```sh
+PYTHON="uv run --with pyarrow python" sh hf-traces/test/run.sh
 ```
 
 ## Releasing
