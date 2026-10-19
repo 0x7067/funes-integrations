@@ -40,7 +40,9 @@ timeout. The memory rides in a file beside the scripts, so every hooks file is s
 
 At install, `setup add` converts the sessions the agent has already written. The `claude` and
 `codex` setups leave out each one whose last turn the local memory holds, as its `funes sessions`
-row says (funes 1.9.0 and newer), so a re-add converts only what changed since.
+row says (funes 1.9.0 and newer), so a re-add converts only what changed since. The `claude` setup
+also keeps those rows beside its scripts: a session the memory holds without the messages typed
+while Claude was working keeps that numbering, and never gets them.
 
 What funes guarantees around these — local-first indexing, one writer at a time, the secrets gate,
 the wrong-memory guard — is in funes's

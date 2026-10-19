@@ -112,9 +112,32 @@ rm "$seeded"
 listing "$last"
 "$setup" add acme/kb >/dev/null
 [ ! -e "$seeded" ] || fail "a transcript whose last turn is indexed was converted again"
+# The rows stay beside the scripts, for the converter.
+[ "$(cat "$plugin/funes/scripts/indexed")" = "other 2026-10-01T09:30:00.000Z 4
+$id $last 5" ] || fail "the memory's rows were not kept: $(cat "$plugin/funes/scripts/indexed")"
 listing "$first"
 "$setup" add acme/kb >/dev/null
 [ -f "$seeded" ] || fail "a transcript that grew since its last indexed turn was not converted"
+
+# A funes before 1.9.0 opens a row on its day alone, with no stamp to tell how a session it lists
+# was numbered: that session is converted without the messages typed while Claude was working (the
+# fixture's last two turns), and one it does not list with them.
+day_listing() {
+    cat >"$FUNES_TEST_PAGES/0" <<EOF
+[${first%%T*}] claude /Users/me/repo 5 turns $1
+  the ask it opened with
+---
+1 sessions
+EOF
+}
+rm "$seeded"
+day_listing "$id"
+"$setup" add acme/kb >/dev/null
+[ "$(jq -s length "$seeded")" = 3 ] || fail "a session listed with no span took its queued messages"
+rm "$seeded"
+day_listing other
+"$setup" add acme/kb >/dev/null
+[ "$(jq -s length "$seeded")" = 5 ] || fail "a session no listing names left its queued messages out"
 
 # Re-run to bind the local memory: the file goes, and so do the boundary hooks.
 "$setup" add >/dev/null
@@ -131,6 +154,7 @@ printf memory >"$HOME/.funes/memory/chunks.lance/keep"
 [ ! -e "$legacy" ] || fail "the pre-registry install stays"
 [ ! -e "$FUNES_HOME/spool/claude" ] || fail "the spool stays"
 [ ! -e "$plugin/funes/scripts/spool" ] || fail "the spool record stays"
+[ ! -e "$plugin/funes/scripts/indexed" ] || fail "the memory's rows stay"
 [ "$(cat "$HOME/.funes/memory/chunks.lance/keep")" = memory ] || fail "the memory was touched"
 expected="mcp remove funes -s user
 plugin uninstall funes@huggingface

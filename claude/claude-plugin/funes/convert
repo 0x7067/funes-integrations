@@ -1,19 +1,26 @@
 #!/bin/sh
 # Convert a Claude Code transcript into a funes turns file (docs/funes-jsonl.md).
 #
-#   convert <transcript.jsonl> [out.funes.jsonl]
+#   convert [--indexed <rows>] <transcript.jsonl> [out.funes.jsonl]
 #
 # The transcript is ~/.claude/projects/<workdir>/<uuid>.jsonl, or a sub-agent's
 # <uuid>/subagents/agent-<hash>.jsonl. Without an output path the turns go to stdout; with one
 # they are written through a temporary file and renamed, so a reader never sees a partial file.
 #
-# The session id is the transcript's file stem and the harness facet is the bundle id.
+# The session id is the transcript's file stem and the harness facet is the bundle id. `<rows>` is
+# what the memory holds, as `<session id> <stamp of its last indexed turn> <turn count>` lines, or
+# the session id alone: a session listed there keeps the numbering it was indexed with.
 set -eu
 
 JQ=${FUNES_JQ:-jq}
 HARNESS=${FUNES_AGENT_ID:-claude}
 
-[ $# -ge 1 ] && [ $# -le 2 ] || { echo "usage: convert <transcript.jsonl> [out.funes.jsonl]" >&2; exit 2; }
+rows=/dev/null
+if [ "${1:-}" = --indexed ] && [ $# -ge 2 ]; then
+    [ ! -r "$2" ] || rows=$2
+    shift 2
+fi
+[ $# -ge 1 ] && [ $# -le 2 ] || { echo "usage: convert [--indexed <rows>] <transcript.jsonl> [out.funes.jsonl]" >&2; exit 2; }
 src=$1
 [ -f "$src" ] || { echo "convert: no such transcript: $src" >&2; exit 1; }
 
@@ -60,13 +67,30 @@ def blocks_of:
   elif type == "array" then [ .[] | select(type == "object") | block ]
   else [] end;
 
+def obj: if type == "object" then . else null end;
+
+# A line as {role, content}: a user or assistant message, or a message the user typed while Claude
+# was working, marked `queued`. Claude Code writes that one as a queued_command attachment in prompt
+# mode rather than a user line. A message from another session is queued the same way, so the
+# origin must be the human one, or absent (older versions write none). Its `rendered` field is the
+# system reminder that wraps the text, so only `prompt` is what they typed.
+def message:
+  (.type | str) as $rt
+  | if $rt == "user" or $rt == "assistant" then
+      (.message | obj) as $msg
+      | {role: (($msg.role | select(type == "string")) // $rt), content: $msg.content}
+    elif $rt == "attachment" then
+      (.attachment | obj) as $a
+      | select(($a.type | str) == "queued_command" and ($a.commandMode | str) == "prompt"
+               and ($a.origin == null or ($a.origin | obj | .kind | str) == "human"))
+      | {role: "user", content: $a.prompt, queued: true}
+    else empty end;
+
 [ $doc | split("\n")[] | fromjson? | select(type == "object") ] as $recs
 | (first($recs[] | .cwd | select(type == "string")) // null) as $cwd
 | [ $recs[]
-    | (.type | str) as $rt
-    | select($rt == "user" or $rt == "assistant")
-    | (.message | if type == "object" then . else null end) as $msg
-    | ($msg.content | blocks_of) as $blocks
+    | message as $m
+    | ($m.content | blocks_of) as $blocks
     | select(($blocks | length) > 0)
     | {format: 1, session_id: $sid}
       + (if $cwd != null then {cwd: $cwd} else {} end)
@@ -74,10 +98,27 @@ def blocks_of:
       + (if (.parentUuid | type) == "string" then {parent_uuid: .parentUuid} else {} end)
       + {seq: 0,
          ts: (.timestamp | str),
-         role: (($msg.role | select(type == "string")) // $rt),
+         role: $m.role,
          blocks: $blocks,
          harness: $harness}
-  ] as $turns
+      + (if $m.queued then {queued: true} else {} end)
+  ] as $all
+# A session the memory holds without its queued messages keeps that numbering, and never takes them.
+# Its row says so: the n-th turn counted without them carries the stamp of its last indexed turn,
+# where a session indexed with them has it on the n-th counted with them. With none before that
+# turn the two counts agree, and the session takes them. The count without them is read first, so
+# when both name a turn carrying the stamp, the session is one indexed without them. A row with no
+# stamp (funes before 1.9.0), or one neither count matches, leaves them out too.
+| [$all[] | select(.queued | not)] as $without
+| (first($rows | split("\n")[] | split(" ") | select(.[0] == $sid)) // null) as $row
+| (if $row == null then true
+   elif ($row | length) != 3 then false
+   else (($row[2] | tonumber) as $n
+     | if $n >= 1 and ($without | length) >= $n and $without[$n - 1].ts == $row[1]
+       then $without[$n - 1] == $all[$n - 1]
+       else $n >= 1 and ($all | length) >= $n and $all[$n - 1].ts == $row[1] end)
+   end) as $takes
+| [$all[] | select($takes or (.queued | not)) | del(.queued)] as $turns
 # tool_result.tool_name comes from the tool_use with the same id, whole file, last write wins, so
 # every emitted turn stands alone.
 | (reduce ($turns[].blocks[] | select(.block_type == "tool_use" and has("tool_use_id"))) as $b
@@ -96,7 +137,7 @@ def blocks_of:
 # line by line without the string copy, but it mangles a multi-byte character that straddles its
 # 4 KiB read buffer (jq 1.7.1), which a transcript hits every few hundred KB.
 run() {
-    "$JQ" -c -n --rawfile doc "$src" --arg sid "$stem" --arg harness "$HARNESS" "$program"
+    "$JQ" -c -n --rawfile doc "$src" --rawfile rows "$rows" --arg sid "$stem" --arg harness "$HARNESS" "$program"
 }
 
 if [ $# -eq 2 ]; then

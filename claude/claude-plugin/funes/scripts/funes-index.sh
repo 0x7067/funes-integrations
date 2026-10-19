@@ -34,14 +34,15 @@ find_bin() {
     return 1
 }
 
-# One transcript into the spool, named after the session it belongs to, which is its own file stem.
+# One transcript into the spool, named after the session it belongs to, which is its own file stem,
+# and numbered as the memory holds it, from the rows `setup add` keeps beside this script.
 convert_one() {
     jq=$1
     src=$2
     [ -n "$src" ] && [ -r "$src" ] || return 0
     stem=${src##*/}
     stem=${stem%.jsonl}
-    if PATH="$(dirname "$jq"):$PATH" "$HERE/../convert" "$src" "$SPOOL/$stem.funes.jsonl" 2>>"$LOG"; then
+    if PATH="$(dirname "$jq"):$PATH" "$HERE/../convert" --indexed "$HERE/indexed" "$src" "$SPOOL/$stem.funes.jsonl" 2>>"$LOG"; then
         log "convert: $stem"
     else
         log "convert: FAILED for $src"
