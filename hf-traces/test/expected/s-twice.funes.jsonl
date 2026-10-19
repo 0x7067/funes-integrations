@@ -1,0 +1,5 @@
+{"format":1,"session_id":"s-twice","turn_uuid":"s-twice-0","seq":0,"ts":"2026-04-16T10:00:00Z","role":"user","blocks":[{"block_type":"text","text":"first upload"}],"harness":"pi"}
+{"format":1,"session_id":"s-twice","turn_uuid":"s-twice-1","parent_uuid":"s-twice-0","seq":1,"ts":"2026-04-16T10:00:00Z","role":"assistant","blocks":[{"block_type":"text","text":"the first copy wins"}],"harness":"pi"}
+{"format":1,"session_id":"s-twice","turn_uuid":"s-twice-0","seq":0,"ts":"2026-04-16T11:00:00Z","role":"user","blocks":[{"block_type":"text","text":"first upload"}],"harness":"pi"}
+{"format":1,"session_id":"s-twice","turn_uuid":"s-twice-1","parent_uuid":"s-twice-0","seq":1,"ts":"2026-04-16T11:00:00Z","role":"assistant","blocks":[{"block_type":"text","text":"a later copy is dropped"}],"harness":"pi"}
+{"format":1,"session_id":"s-twice","turn_uuid":"s-twice-2","parent_uuid":"s-twice-1","seq":2,"ts":"2026-04-16T11:00:00Z","role":"user","blocks":[{"block_type":"text","text":"a turn only the second row has"}],"harness":"pi"}
