@@ -59,14 +59,15 @@ require_jq() {
     fi
 }
 
-# What the local memory holds, as `<session id> <stamp of its last indexed turn>` lines: the end of
-# each `funes sessions` row, walked a page at a time from the offset each page names. A funes whose
-# rows carry no span (before 1.9.0), or none to ask, lists nothing.
+# What the local memory holds, as `<session id> <stamp of its last indexed turn> <turn count>` lines:
+# each `funes sessions` row, walked a page at a time from the offset each page names. A row with no
+# span (funes before 1.9.0) gives the session id alone. With no funes to ask, nothing is listed.
 indexed() {
     offset=0
     while [ -n "$offset" ]; do
         page=$("$FUNES" sessions --memory local --limit 200 --offset "$offset" 2>/dev/null) || return 0
-        printf '%s\n' "$page" | sed -n 's/^\[[^ ]* → \([^]]*\)] .* turns \(.*\)$/\2 \1/p'
+        printf '%s\n' "$page" | sed -n -e 's/^\[[^ ]* → \([^]]*\)] .* \([0-9][0-9]*\) turns \(.*\)$/\3 \1 \2/p' \
+            -e 's/^\[[^] ]*] .* turns \(.*\)$/\1/p'
         offset=$(printf '%s\n' "$page" | sed -n 's/.* continue with --offset \([0-9]*\),.*/\1/p')
     done
 }
@@ -83,20 +84,24 @@ last_turn() {
 # Convert the transcripts Claude Code has already written, so recall reaches them before the next
 # turn. Sub-agent transcripts nest under their session's directory and are picked up by the same
 # walk. A transcript whose last turn the memory holds already is left out, so a re-run converts what
-# changed since.
+# changed since. What the memory holds stays beside the scripts, where the converter reads the
+# numbering each session was indexed with.
 seed() {
     spool=$1
     # Claude Code keeps its transcripts under its config directory, which `CLAUDE_CONFIG_DIR` moves.
     projects="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
     [ -d "$projects" ] || return 0
     work=$(mktemp -d)
-    indexed >"$work/indexed"
+    rows="$PLUGIN_ROOT/funes/scripts/indexed"
+    indexed >"$rows.new"
+    mv -f "$rows.new" "$rows"
+    awk 'NF == 3 { print $1, $2 }' "$rows" >"$work/indexed"
     find "$projects" -type f -name '*.jsonl' | while IFS= read -r src; do
         if [ -s "$work/indexed" ] && grep -qxF -- "$(last_turn "$src" "$work")" "$work/indexed"; then
             continue
         fi
         stem=${src##*/}
-        "$PLUGIN_ROOT/funes/convert" "$src" "$spool/${stem%.jsonl}.funes.jsonl" || true
+        "$PLUGIN_ROOT/funes/convert" --indexed "$rows" "$src" "$spool/${stem%.jsonl}.funes.jsonl" || true
     done
     rm -rf "$work"
 }
@@ -195,7 +200,7 @@ remove() {
     # a re-add cannot rebuild, and leaving it would have funes keep indexing an agent it no longer
     # serves.
     rm -rf "$(spool_dir)" "$LEGACY"
-    rm -rf "$PLUGIN_ROOT/funes/scripts/spool" "$PLUGIN_ROOT/funes/scripts/swept"
+    rm -rf "$PLUGIN_ROOT/funes/scripts/spool" "$PLUGIN_ROOT/funes/scripts/swept" "$PLUGIN_ROOT/funes/scripts/indexed"
 
     if ! have_claude; then
         echo "\`claude\` isn't on PATH — the plugin files were removed. Once it is, remove the registrations manually:"

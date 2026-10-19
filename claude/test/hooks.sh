@@ -81,6 +81,15 @@ mine; funes; agent/claude; agent_version/2.1.175: push acme/kb"
 [ "$(cat "$FUNES_TEST_CLI_LOG")" = "$expected" ] || fail "funes was asked:
 $(cat "$FUNES_TEST_CLI_LOG")"
 
+# A session the memory holds without its queued messages keeps that numbering: the rows `setup add`
+# keeps beside the scripts reach the converter.
+tick
+cat "$BUNDLE/claude-plugin/funes/test/queued.jsonl" >"$tree/queued.jsonl"
+printf 'queued 2026-10-01T10:01:00.000Z 5\n' >"$scripts/indexed"
+fire
+[ "$(jq -r .turn_uuid "$spool/queued.funes.jsonl" | paste -s -d ' ' -)" = "u1 a1 a2 a3 u2 a4" ] ||
+    fail "a session held without its queued messages took them"
+
 # The foreground half, as the hook runs it: the payload on stdin — carrying an assistant message
 # larger than any argument could — handed to a detached worker, and the hook returns at once.
 tick
