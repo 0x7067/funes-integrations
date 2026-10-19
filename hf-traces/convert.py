@@ -17,6 +17,9 @@ re-importing it adds nothing:
   - A message with no block is dropped, and `seq` counts only the messages kept.
   - `turn_uuid` is `<session id>-<seq>`, and `parent_uuid` the turn before it.
   - Every turn carries the session's `sent_at`, and `harness` and `metadata.cwd` come from its row.
+    A turns file requires a UTC time with a `Z` and a harness id, which that reader did not check.
+    So a `+00:00` offset is written `Z`, a row with no `sent_at` takes the epoch, and a row with no
+    harness takes `hf-traces`. Neither field is part of a turn's id.
 
     uv run convert.py <parquet file or directory> <out-dir>
     python3 convert.py <parquet file or directory> <out-dir>    # with pyarrow installed
@@ -31,6 +34,9 @@ import pyarrow.parquet as pq
 
 FORMAT = 1
 COLUMNS = ("session_id", "sent_at", "harness", "metadata", "messages")
+# What a turn carries when its row has no harness or no `sent_at`. A turns file requires both.
+HARNESS = "hf-traces"
+EPOCH = "1970-01-01T00:00:00Z"
 
 # Unicode White_Space, which is what Rust's `str::trim` tests. Python's own `str.strip` differs:
 # it also strips U+001C–U+001F, and a block is kept or dropped on this test.
@@ -82,12 +88,17 @@ def blocks_of(message):
 
 
 def strict_json(text):
-    """`json.loads` as funes parses: `NaN` and `Infinity` are not JSON."""
+    """`json.loads` as funes parses: `NaN` and `Infinity` are not JSON, and neither is half of a
+    surrogate pair."""
 
     def refuse(constant):
         raise ValueError(f"{constant} is not JSON")
 
-    return json.loads(text, parse_constant=refuse)
+    value = json.loads(text, parse_constant=refuse)
+    # A lone surrogate escape decodes here, where funes refuses the whole text. The string it gives
+    # does not encode to UTF-8, and UnicodeEncodeError is a ValueError.
+    compact(value).encode("utf-8")
+    return value
 
 
 def messages_of(elements):
@@ -115,14 +126,24 @@ def cwd_of(metadata):
     return string(value.get("cwd")) if isinstance(value, dict) else None
 
 
+def timestamp(sent_at):
+    """A row's `sent_at` as a turns file requires it: RFC 3339 in UTC with a `Z`. A row without one
+    takes the epoch."""
+    if not sent_at:
+        return EPOCH
+    if sent_at.endswith("+00:00"):
+        return sent_at.removesuffix("+00:00") + "Z"
+    return sent_at
+
+
 def turns_of(row):
     """One row's turns, or none when it has no session id, no messages, or no message with a
     block."""
     session_id = string(row.get("session_id"))
     if session_id is None or row.get("messages") is None:
         return []
-    ts = string(row.get("sent_at")) or ""
-    harness = string(row.get("harness")) or ""
+    ts = timestamp(string(row.get("sent_at")))
+    harness = string(row.get("harness")) or HARNESS
     cwd = cwd_of(row.get("metadata"))
     turns = []
     parent = None

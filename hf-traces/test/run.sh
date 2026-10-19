@@ -3,7 +3,9 @@
 # of each row and message the mapping treats differently, and the turns files it must produce.
 #
 # `expected/` matches funes's own parquet reader, the one `funes index <org>/<repo>` ran: indexed
-# from the parquet or from these files, every session reads back the same in `funes get`.
+# from the parquet or from these files, every session reads back the same in `funes get`. The
+# exception is the time of `s-bare` and `s-offset`, which that reader kept as the row held it and a
+# turns file cannot carry.
 #
 #   sh hf-traces/test/run.sh
 #

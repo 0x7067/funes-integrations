@@ -47,6 +47,8 @@ MAIN = [
     msg(role="assistant", content="\u001f"),
     # `NaN` is not JSON, so the message is skipped.
     '{"role":"user","content":"not this one","score":NaN}',
+    # Half of a surrogate pair is not JSON to funes either, so the message is skipped.
+    msg(role="user", content="nor this one \ud83d"),
     msg(content="no role"),
 ]
 
@@ -57,6 +59,11 @@ ROWS = [
     ("pi", "s-nomessages", None, None, "2026-04-15T10:00:00Z"),
     ("pi", "s-blank", [msg(role="assistant", content="  ")], None, "2026-04-15T10:00:00Z"),
     ("pi", "../escape", [msg(role="user", content="a session id that is not a file name")], None, "2026-04-15T10:00:00Z"),
+    # No harness and no `sent_at`, which a turns file requires: the turn takes `hf-traces` and the
+    # epoch.
+    (None, "s-bare", [msg(role="user", content="a row with neither")], None, None),
+    # A `+00:00` offset is written `Z`.
+    ("pi", "s-offset", [msg(role="user", content="sent with an offset")], None, "2026-04-17T10:00:00.250+00:00"),
     # One session on two rows: the first copy of each turn wins, and the second row's extra turn
     # is added.
     (

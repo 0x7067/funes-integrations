@@ -1,0 +1,1 @@
+{"format":1,"session_id":"s-offset","turn_uuid":"s-offset-0","seq":0,"ts":"2026-04-17T10:00:00.250Z","role":"user","blocks":[{"block_type":"text","text":"sent with an offset"}],"harness":"pi"}

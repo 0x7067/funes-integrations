@@ -1,0 +1,1 @@
+{"format":1,"session_id":"s-bare","turn_uuid":"s-bare-0","seq":0,"ts":"1970-01-01T00:00:00Z","role":"user","blocks":[{"block_type":"text","text":"a row with neither"}],"harness":"hf-traces"}
