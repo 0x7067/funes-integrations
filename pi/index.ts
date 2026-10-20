@@ -88,7 +88,9 @@ class FunesMcp {
     // is done nothing should. Without this the idle child pins the host's event
     // loop open and the turn never exits.
     child.unref();
-    child.stdin.unref();
+    // Bun's stdin is a bare Writable with no unref — and pi ships as a Bun-compiled binary. A throw
+    // here would cost every tool; a stdin Bun never refs has nothing to release.
+    (child.stdin as { unref?: () => void }).unref?.();
     child.stdout.unref();
     child.stderr.unref();
     child.stdout.setEncoding("utf8");

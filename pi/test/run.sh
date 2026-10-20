@@ -41,4 +41,10 @@ if ! "$JS" $TS "$HERE/startup.mjs"; then
 fi
 echo "pi startup: ok"
 
+if ! "$JS" $TS "$HERE/compiled-host.mjs"; then
+    echo "pi compiled host: the extension does not load as pi's Bun binary loads it — see above" >&2
+    exit 1
+fi
+echo "pi compiled host: ok"
+
 sh "$HERE/setup.sh"

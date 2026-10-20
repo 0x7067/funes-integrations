@@ -287,9 +287,21 @@ export function convertTree(root, spool, since = 0, except = "") {
   return written;
 }
 
+// Whether this file is the script being run, rather than a module the extension imported.
 // `import.meta.url` is the resolved path; argv[1] is not, so a run through a symlinked directory
-// (macOS's /tmp) would otherwise miss.
-if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
+// (macOS's /tmp) would otherwise miss. argv[1] need not exist at all: a host compiled into one
+// executable — pi's Bun build — reports a virtual path there (`/$bunfs/root/pi`), and a throw here
+// would fail the import, and with it the extension.
+function invokedDirectly() {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    return false;
+  }
+}
+
+if (invokedDirectly()) {
   const [src, spool] = process.argv.slice(2);
   if (!src || !spool) {
     console.error("usage: convert.mjs <session.jsonl | sessions-root> <spool-dir>");
